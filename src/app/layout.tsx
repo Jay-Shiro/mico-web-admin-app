@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Lama Dev School Management Dashboard",
-  description: "Next.js School Management System",
+  title: "Mico Admin Dashboard",
+  description: "A Web App for managing Mico Activites",
 };
 
 export default function RootLayout({
