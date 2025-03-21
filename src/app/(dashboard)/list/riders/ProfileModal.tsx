@@ -2,6 +2,7 @@ import {motion} from "framer-motion"
 import Image from "next/image"
 import { useState } from "react"
 import { Rider } from "./riderType";
+import { exportToCSV } from "@/lib/exportCSV";
 
   interface ProfileModalProps {
     rider: Rider;
@@ -146,8 +147,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ rider, onClose, onSt
                 )}
 
                 </motion.div>
-                {/* CLOSE BUTTON */}
-                <div className="mt-6 flex justify-center">
+                {/* CLOSE  BUTTON */}
+                <div className="mt-6 flex justify-between">
+                    {/* EXPORT BUTTON */}
+                    <button className="bg-color2/80 text-white px-4 py-2 rounded-md hover:bg-color2/50" onClick={() => exportToCSV(rider)}>Export CSV</button>
+                    
+                    {/* CLOSE BUTTON */}
                     <button className="bg-color1/40 text-white px-4 py-2 rounded-md hover:bg-color1/50" onClick={onClose}>Close</button>
                 </div>
             </motion.div>
