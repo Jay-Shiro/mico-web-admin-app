@@ -9,7 +9,19 @@ import { exportToCSV } from "@/lib/exportCSV";
     onClose: () => void;
     onStatusToggle: (id: number, updatedStatus: string) => void;
   }
+
   
+  const formatDateJoined = (isoString: string): string => {
+        const date = new Date(isoString);
+
+        const day = date.getDate().toString().padStart(2, "0");
+        const month = date.toLocaleString("en-US", { month: "short" });
+        const year = date.getFullYear();
+        const time = date.toLocaleString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true 
+        });
+
+        return `${day} ${month} ${year} at ${time.toLowerCase()}`;
+  }
 
 export const ProfileModal: React.FC<ProfileModalProps> = ({ rider, onClose, onStatusToggle }) => {
 
@@ -49,7 +61,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ rider, onClose, onSt
                 {/* STATUS TOGGLE */}
                 <div className="mt-4 flex items-center justify-between">
                 <p className="text-gray-700 font-medium">Status</p>
-                <div className={`w-12 h-6 flex items-center bg-gray-300 rounded-full p-1 cursor-pointer transition-all ${isActive ? "bg-color2/80" : "bg-red-400" }`} onClick={toggleStatus}>
+                <div className={`w-12 h-6 flex items-center bg-gray-300 rounded-full p-1 cursor-pointer transition-all ${isActive ? "bg-color2" : "bg-red-400" }`} onClick={toggleStatus}>
                 <motion.div className="w-5 h-5 bg-white rounded-full shadow-md" animate={{ x: isActive ? 24 : 0}} transition={{ duration: 0.2 }} />
                 </div>    
                 </div>  
@@ -69,6 +81,8 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ rider, onClose, onSt
                     <p className="text-gray-500"> <strong>Gender:</strong> {rider.gender}</p>
                     <p className="text-gray-500"><strong>Email:</strong> {rider.email}</p>
                     <p className="text-gray-500"><strong>Phone:</strong> {rider.phone}</p>
+                    <p className="text-gray-500"><strong>Date Joined:</strong> {formatDateJoined(rider.date_joined)}</p>
+                    <p className="text-gray-500"><strong>Vehicle Type:</strong> {rider.vehicle_type}</p>
                     <p className="text-gray-500"><strong>Address:</strong> {rider.homeaddressdetails}</p>
                     <p className="text-gray-500"><strong>Bvn:</strong> {rider.bvn}</p>
                     <p className="text-gray-500"> <strong>Nin:</strong> {rider.nin}</p>
