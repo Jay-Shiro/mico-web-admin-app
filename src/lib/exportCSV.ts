@@ -137,38 +137,27 @@ export const exportAllRidersToCSV = (riders: Rider[]) => {
 export const exportDeliveryToCSV = (delivery: Delivery) => {
   const csvData = [
     [
-      `${delivery.firstname} ${
-        delivery.lastname
-      }'s Details downloaded on ${new Date().toLocaleDateString()}`,
+      `Delivery ID ${
+        delivery.id
+      } Details downloaded on ${new Date().toLocaleDateString()}`,
     ],
     ["Field", "Value"],
     ["ID", delivery.id],
-    ["Name", `${delivery.firstname} ${delivery.lastname}`],
-    ["Photo Url", delivery.facial_photo_url],
-    ["Gender", delivery.gender],
-    ["Email", delivery.email],
-    ["Phone", delivery.phone],
-    ["Vehicle Type", delivery.vehicle_type],
-    ["Date Joined", delivery.date_joined],
-    ["Address", delivery.homeaddressdetails],
-    ["BVN", delivery.bvn],
-    ["NIN", delivery.nin],
-    ["Bank", delivery.accountbank],
-    ["Account Name", delivery.accountname],
-    ["Account Number", delivery.accountnumber],
-    ["Earnings", `N${delivery.earnings.toLocaleString()}`],
-    ["Status", delivery.status],
-    ["Ratings", delivery.ratings],
-    ["NationalId url", delivery.file_ids.nationalid || "not provided"],
-    ["Utility Bill url", delivery.file_ids.utility_bill || "not provided"],
-    [
-      "Papers url",
-      delivery.file_ids.vehicle_papers ||
-        delivery.file_ids.bike_papers ||
-        delivery.file_ids.lorry_papers ||
-        "not provided",
-    ],
-    ["License url", delivery.file_ids.deliveries_license || "not provided"],
+    ["User Id", delivery.user_id],
+    ["Price", delivery.price],
+    ["Distance", delivery.distance],
+    ["Startpoint", delivery.startpoint],
+    ["Endpoint", delivery.endpoint],
+    ["Vehicle Type", delivery.vehicletype],
+    ["Transaction Type", delivery.transactiontype],
+    ["Package Size", delivery.packagesize],
+    ["Delivery Speed", delivery.deliveryspeed],
+    ["Status", delivery.status.current],
+    ["Status Timestamp", delivery.status.timestamp],
+    ["Payment Status", delivery.transaction_info.payment_status],
+    ["Payment_date", delivery.transaction_info.payment_date],
+    ["Payment_last_updated", delivery.transaction_info.last_updated],
+    ["Last Updated", delivery.last_updated],
   ];
 
   const csvContent =
@@ -177,10 +166,7 @@ export const exportDeliveryToCSV = (delivery: Delivery) => {
   const encodeUri = encodeURI(csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodeUri);
-  link.setAttribute(
-    "download",
-    `delivery_${delivery.id}_${delivery.firstname} ${delivery.lastname}.csv`
-  );
+  link.setAttribute("download", `delivery_${delivery.id}.csv`);
   document.body.appendChild(link);
 
   // download button trigger
@@ -195,53 +181,40 @@ export const exportAllDeliveriesToCSV = (deliveries: Delivery[]) => {
 
   const headers = [
     "ID",
-    "photo_url",
-    "Name",
-    "Gender",
-    "Email",
-    "Phone",
+    "User Id",
+    "Price",
+    "Distance",
+    "Startpoint",
+    "Endpoint",
     "Vehicle Type",
-    "Address",
-    "BVN",
-    "NIN",
-    "Date Joined",
-    "Bank",
-    "Account Name",
-    "Account Number",
-    "Earnings",
+    "Transaction Type",
+    "Package Size",
+    "Delivery Speed",
     "Status",
-    "Ratings",
-    "National ID url",
-    "Utility Bill url",
-    "Vehicle Papers URL",
-    "Deliveries License",
+    "Status Timestamp",
+    "Payment Status",
+    "Payment_date",
+    "Payment_last_updated",
+    "Last Updated",
   ];
 
   const csvData = deliveries.map((delivery) => [
     delivery.id,
-    delivery.facial_photo_url,
-    `${delivery.firstname} ${delivery.lastname}`,
-    delivery.gender,
-    delivery.email,
-    delivery.phone,
-    delivery.vehicle_type,
-    delivery.homeaddressdetails,
-    delivery.bvn || "not provided",
-    delivery.nin || "not provided",
-    delivery.date_joined,
-    delivery.accountbank,
-    delivery.accountname,
-    delivery.accountnumber,
-    `N${delivery.earnings.toLocaleString()}`,
-    delivery.status,
-    delivery.ratings,
-    delivery.file_ids.nationalid || "not provided",
-    delivery.file_ids.utility_bill || "not provided",
-    delivery.file_ids.vehicle_papers ||
-      delivery.file_ids.bike_papers ||
-      delivery.file_ids.lorry_papers ||
-      "not provided",
-    delivery.file_ids.deliveries_license || "not provided",
+    delivery.user_id,
+    delivery.price,
+    delivery.distance,
+    delivery.startpoint,
+    delivery.endpoint,
+    delivery.vehicletype,
+    delivery.transactiontype,
+    delivery.packagesize,
+    delivery.deliveryspeed,
+    delivery.status.current,
+    delivery.status.timestamp,
+    delivery.transaction_info.payment_status,
+    delivery.transaction_info.payment_date,
+    delivery.transaction_info.last_updated,
+    delivery.last_updated,
   ]);
 
   const csvContent = [

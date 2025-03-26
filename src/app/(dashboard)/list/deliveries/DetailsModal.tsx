@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Rider } from "@/app/(dashboard)/list/riders/riderType";
 import React, { useState } from "react";
 import { Delivery } from "./deliveryType";
-import { exportToCSV } from "@/lib/exportCSV";
+import { exportDeliveryToCSV } from "@/lib/exportCSV";
 import { FaMotorcycle, FaCar } from "react-icons/fa";
 import { DistanceDisplay } from "./DistanceDisplay";
 import { Refresh } from "./Refresh";
@@ -292,7 +292,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
         <div className="flex justify-between gap-4">
           <button
             className="flex-1 bg-color2/40 text-color1 px-3 py-1.5 rounded-md hover:bg-color2/50 transition-colors"
-            onClick={onClose}
+            onClick={() => exportDeliveryToCSV(delivery)}
           >
             Export CSV
           </button>
