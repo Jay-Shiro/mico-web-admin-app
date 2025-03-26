@@ -1,6 +1,6 @@
 // TEMPORARY DATA
 
-export let role = "admin";
+export let role = "account";
 
 export const adminData = [
   {
@@ -270,12 +270,16 @@ export const ridersData = [
     homeaddressdetails: "123 Main St, Anytown, USA",
     ratings: 5,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
       facial_picture:
         "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=1200",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -299,10 +303,14 @@ export const ridersData = [
     homeaddressdetails: "456 Elm St, Springfield, USA",
     ratings: 2,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -326,10 +334,14 @@ export const ridersData = [
     homeaddressdetails: "789 Oak St, Riverside, USA",
     ratings: 4,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -353,10 +365,14 @@ export const ridersData = [
     homeaddressdetails: "101 Maple St, Lakeside, USA",
     ratings: 3,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -380,10 +396,14 @@ export const ridersData = [
     homeaddressdetails: "555 Birch St, Westwood, USA",
     ratings: 4,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -407,10 +427,14 @@ export const ridersData = [
     ratings: 5,
     homeaddressdetails: "123 Main St, Anytown, USA",
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -434,10 +458,14 @@ export const ridersData = [
     homeaddressdetails: "456 Elm St, Springfield, USA",
     ratings: 2,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -461,10 +489,14 @@ export const ridersData = [
     homeaddressdetails: "789 Oak St, Riverside, USA",
     ratings: 4,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -488,10 +520,14 @@ export const ridersData = [
     homeaddressdetails: "101 Maple St, Lakeside, USA",
     ratings: 4,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
   {
@@ -515,15 +551,17 @@ export const ridersData = [
     homeaddressdetails: "555 Birch St, Westwood, USA",
     ratings: 3,
     file_ids: {
-      nationalid: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      utility_bill: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      bike_papers: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
-      riders_license: "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      nationalid:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      utility_bill:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      bike_papers:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
+      riders_license:
+        "https://ichef.bbci.co.uk/ace/ws/640/cpsprodpb/5e74/live/bcc476c0-f8c2-11ee-97f7-e98b193ef1b8.jpg.webp",
     },
   },
-  
 ];
-
 
 export const supportData = [
   {
@@ -614,123 +652,193 @@ export const subjectsData = [
     name: "Math",
     teachers: ["Alice Phelps", "Russell Davidson"],
   },
-  {
-    id: 2,
-    name: "English",
-    teachers: ["Manuel Becker", "Eddie Chavez"],
-  },
-  {
-    id: 3,
-    name: "Physics",
-    teachers: ["Lola Newman", "Darrell Delgado"],
-  },
-  {
-    id: 4,
-    name: "Chemistry",
-    teachers: ["Nathan Kelly", "Benjamin Snyder"],
-  },
-  {
-    id: 5,
-    name: "Biology",
-    teachers: ["Alma Benson", "Lina Collier"],
-  },
-  {
-    id: 6,
-    name: "History",
-    teachers: ["Hannah Bowman", "Betty Obrien"],
-  },
-  {
-    id: 7,
-    name: "Geography",
-    teachers: ["Lora French", "Sue Brady"],
-  },
-  {
-    id: 8,
-    name: "Art",
-    teachers: ["Harriet Alvarado", "Mayme Keller"],
-  },
-  {
-    id: 9,
-    name: "Music",
-    teachers: ["Gertrude Roy", "Rosa Singleton"],
-  },
-  {
-    id: 10,
-    name: "Literature",
-    teachers: ["Effie Lynch", "Brett Flowers"],
-  },
 ];
 
-export const classesData = [
+export const deliveriesData = [
   {
-    id: 1,
-    name: "1A",
-    capacity: 20,
-    grade: 1,
-    supervisor: "Joseph Padilla",
+    id: "23523432343",
+    user_id: "1234567890",
+    price: 0,
+    distance: "5 km",
+    startpoint:
+      "DRAGON WOK EXPRESS, Adetokunbo Ademola Crescent, Abuja, Nigeria",
+    endpoint: "Results Fitness, Richmond Highway, Alexandria, VA, USA",
+    vehicletype: "bike",
+    transactiontype: "cash",
+    packagesize: "Quarter and below",
+    deliveryspeed: "standard",
+    status: {
+      current: "completed",
+      timestamp: "2025-03-21T11:56:30.096000",
+    },
+    transaction_info: {
+      payment_status: "pending",
+      payment_date: "2025-03-20T08:53:40.804000",
+      last_updated: "2025-03-20T07:53:42.642000",
+    },
+    last_updated: "2025-03-21T11:56:30.096000",
+    rider_id: "1",
   },
   {
-    id: 2,
-    name: "2B",
-    capacity: 22,
-    grade: 2,
-    supervisor: "Blake Joseph",
+    id: "8765432109",
+    user_id: "9876543210",
+    price: 5,
+    distance: "10 km",
+    startpoint: "Lekki Mall, Admiralty Way, Lagos, Nigeria",
+    endpoint: "Eko Hotel & Suites, Adetokunbo Ademola Street, Lagos, Nigeria",
+    vehicletype: "bike",
+    transactiontype: "cash",
+    packagesize: "Medium",
+    deliveryspeed: "express",
+    status: {
+      current: "pending",
+      timestamp: "2025-03-22T09:30:15.120000",
+    },
+    transaction_info: {
+      payment_status: "paid",
+      payment_date: "2025-03-22T08:20:10.654000",
+      last_updated: "2025-03-22T08:21:42.612000",
+    },
+    last_updated: "2025-03-22T09:30:15.120000",
+    rider_id: "2",
   },
   {
-    id: 3,
-    name: "3C",
-    capacity: 20,
-    grade: 3,
-    supervisor: "Tom Bennett",
+    id: "5432109876",
+    user_id: "1122334455",
+    price: 7,
+    distance: "12 km",
+    startpoint: "Silverbird Galleria, Victoria Island, Lagos, Nigeria",
+    endpoint: "Mega Plaza, Idowu Martins Street, Lagos, Nigeria",
+    vehicletype: "car",
+    transactiontype: "card",
+    packagesize: "Large",
+    deliveryspeed: "standard",
+    status: {
+      current: "in transit",
+      timestamp: "2025-03-22T10:15:20.230000",
+    },
+    transaction_info: {
+      payment_status: "pending",
+      payment_date: "2025-03-22T09:40:50.560000",
+      last_updated: "2025-03-22T09:50:00.780000",
+    },
+    last_updated: "2025-03-22T10:15:20.230000",
+    rider_id: "4",
   },
   {
-    id: 4,
-    name: "4B",
-    capacity: 18,
-    grade: 4,
-    supervisor: "Aaron Collins",
+    id: "1928374650",
+    user_id: "5566778899",
+    price: 3,
+    distance: "4 km",
+    startpoint: "Wuse Market, Wuse Zone 5, Abuja, Nigeria",
+    endpoint: "Maitama Amusement Park, Maitama, Abuja, Nigeria",
+    vehicletype: "bike",
+    transactiontype: "cash",
+    packagesize: "Small",
+    deliveryspeed: "standard",
+    status: {
+      current: "completed",
+      timestamp: "2025-03-21T14:00:00.096000",
+    },
+    transaction_info: {
+      payment_status: "paid",
+      payment_date: "2025-03-21T12:50:30.654000",
+      last_updated: "2025-03-21T13:30:20.789000",
+    },
+    last_updated: "2025-03-21T14:00:00.096000",
+    rider_id: "3",
   },
   {
-    id: 5,
-    name: "5A",
-    capacity: 16,
-    grade: 5,
-    supervisor: "Iva Frank",
+    id: "1234567891",
+    user_id: "6677889900",
+    price: 4,
+    distance: "6 km",
+    startpoint: "Jabi Lake Mall, Bala Sokoto Way, Abuja, Nigeria",
+    endpoint: "Transcorp Hilton, Maitama, Abuja, Nigeria",
+    vehicletype: "bike",
+    transactiontype: "cash",
+    packagesize: "Quarter and below",
+    deliveryspeed: "standard",
+    status: {
+      current: "pending",
+      timestamp: "2025-03-22T12:00:30.096000",
+    },
+    transaction_info: {
+      payment_status: "pending",
+      payment_date: "2025-03-22T11:10:20.654000",
+      last_updated: "2025-03-22T11:50:45.642000",
+    },
+    last_updated: "2025-03-22T12:00:30.096000",
+    rider_id: "5",
   },
   {
-    id: 5,
-    name: "5B",
-    capacity: 20,
-    grade: 5,
-    supervisor: "Leila Santos",
+    id: "9876543212",
+    user_id: "1234432112",
+    price: 8,
+    distance: "15 km",
+    startpoint: "Novare Mall, Lekki-Epe Expressway, Lagos, Nigeria",
+    endpoint: "Circle Mall, Jakande, Lagos, Nigeria",
+    vehicletype: "car",
+    transactiontype: "card",
+    packagesize: "Large",
+    deliveryspeed: "express",
+    status: {
+      current: "in transit",
+      timestamp: "2025-03-22T14:30:15.120000",
+    },
+    transaction_info: {
+      payment_status: "paid",
+      payment_date: "2025-03-22T13:40:10.654000",
+      last_updated: "2025-03-22T14:10:42.612000",
+    },
+    last_updated: "2025-03-22T14:30:15.120000",
+    rider_id: "7",
   },
   {
-    id: 7,
-    name: "7A",
-    capacity: 18,
-    grade: 7,
-    supervisor: "Carrie Walton",
+    id: "1112223334",
+    user_id: "9988776655",
+    price: 2,
+    distance: "3 km",
+    startpoint: "Shoprite, Ikeja City Mall, Lagos, Nigeria",
+    endpoint: "Maryland Mall, Ikorodu Road, Lagos, Nigeria",
+    vehicletype: "bike",
+    transactiontype: "cash",
+    packagesize: "Small",
+    deliveryspeed: "standard",
+    status: {
+      current: "completed",
+      timestamp: "2025-03-21T16:00:30.096000",
+    },
+    transaction_info: {
+      payment_status: "paid",
+      payment_date: "2025-03-21T15:10:20.804000",
+      last_updated: "2025-03-21T15:50:42.642000",
+    },
+    last_updated: "2025-03-21T16:00:30.096000",
+    rider_id: "4",
   },
   {
-    id: 8,
-    name: "6B",
-    capacity: 22,
-    grade: 6,
-    supervisor: "Christopher Butler",
-  },
-  {
-    id: 9,
-    name: "6C",
-    capacity: 18,
-    grade: 6,
-    supervisor: "Marc Miller",
-  },
-  {
-    id: 10,
-    name: "6D",
-    capacity: 20,
-    grade: 6,
-    supervisor: "Ophelia Marsh",
+    id: "9988776655",
+    user_id: "5544332211",
+    price: 6,
+    distance: "8 km",
+    startpoint: "Aminu Kano Crescent, Wuse 2, Abuja, Nigeria",
+    endpoint: "Ceddi Plaza, Central Business District, Abuja, Nigeria",
+    vehicletype: "bike",
+    transactiontype: "cash",
+    packagesize: "Medium",
+    deliveryspeed: "express",
+    status: {
+      current: "pending",
+      timestamp: "2025-03-22T17:45:30.096000",
+    },
+    transaction_info: {
+      payment_status: "pending",
+      payment_date: "2025-03-22T16:30:40.804000",
+      last_updated: "2025-03-22T17:10:42.642000",
+    },
+    last_updated: "2025-03-22T17:45:30.096000",
+    rider_id: "10",
   },
 ];
 
@@ -1191,7 +1299,6 @@ export const announcementsData = [
     date: "2025-01-01",
   },
 ];
-
 
 // YOU SHOULD CHANGE THE DATES OF THE EVENTS TO THE CURRENT DATE TO SEE THE EVENTS ON THE CALENDAR
 export const calendarEvents = [
