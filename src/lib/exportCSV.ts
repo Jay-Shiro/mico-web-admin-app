@@ -10,7 +10,7 @@ export const exportToCSV = (rider: Rider) => {
       }'s Details downloaded on ${new Date().toLocaleDateString()}`,
     ],
     ["Field", "Value"],
-    ["ID", rider.id],
+    ["ID", rider._id],
     ["Name", `${rider.firstname} ${rider.lastname}`],
     ["Photo Url", rider.facial_photo_url],
     ["Gender", rider.gender],
@@ -19,8 +19,8 @@ export const exportToCSV = (rider: Rider) => {
     ["Vehicle Type", rider.vehicle_type],
     ["Date Joined", rider.date_joined],
     ["Address", rider.homeaddressdetails],
-    ["BVN", rider.bvn],
     ["NIN", rider.nin],
+    ["BVN", rider.bvn],
     ["Bank", rider.accountbank],
     ["Account Name", rider.accountname],
     ["Account Number", rider.accountnumber],
@@ -47,7 +47,7 @@ export const exportToCSV = (rider: Rider) => {
   link.setAttribute("href", encodeUri);
   link.setAttribute(
     "download",
-    `rider_${rider.id}_${rider.firstname} ${rider.lastname}.csv`
+    `rider_${rider._id}_${rider.firstname} ${rider.lastname}.csv`
   );
   document.body.appendChild(link);
 
@@ -70,7 +70,7 @@ export const exportAllRidersToCSV = (riders: Rider[]) => {
     "Phone",
     "Vehicle Type",
     "Address",
-    "BVN",
+    "Bvn",
     "NIN",
     "Date Joined",
     "Bank",
@@ -86,7 +86,7 @@ export const exportAllRidersToCSV = (riders: Rider[]) => {
   ];
 
   const csvData = riders.map((rider) => [
-    rider.id,
+    rider._id,
     rider.facial_photo_url,
     `${rider.firstname} ${rider.lastname}`,
     rider.gender,
