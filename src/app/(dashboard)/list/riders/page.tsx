@@ -227,6 +227,7 @@ const RidersListPage = () => {
           riderId={selectedRider._id}
           onClose={() => setSelectedRider(null)}
           onStatusToggle={handleStatusToggle}
+          onRiderDeleted={fetchRiders}
         />
       )}
       <div></div>

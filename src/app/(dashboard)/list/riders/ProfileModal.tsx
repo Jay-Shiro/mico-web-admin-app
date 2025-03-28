@@ -8,6 +8,7 @@ interface ProfileModalProps {
   riderId: string;
   onClose: () => void;
   onStatusToggle: (id: string, updatedStatus: string) => void;
+  onRiderDeleted: any;
 }
 
 const formatDateJoined = (isoString: string): string => {
@@ -29,9 +30,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   riderId,
   onClose,
   onStatusToggle,
+  onRiderDeleted,
 }) => {
   const [rider, setRider] = useState<any>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [deleteMode, setDeleteMode] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchRider = useCallback(async () => {
@@ -93,7 +96,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       }
 
       onStatusToggle(rider._id, newStatus);
-
       // fetch latest data in the background (1 sec delay)
     } catch (error) {
       console.error("Error updating status:", error);
@@ -114,6 +116,82 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   useEffect(() => {
     console.log("Updated Rider:", rider); // Check if state updates after toggle
   }, [rider]);
+
+  async function deleteRiderRoute(riderId: string) {
+    setIsUpdating(true);
+
+    try {
+      const res = await fetch(`/api/riders/${riderId}/delete`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to delete rider`);
+      }
+
+      alert("Deleted successfully!");
+      setDeleteMode(false);
+      onClose();
+
+      // fetch latest data in the background (1 sec delay)
+      onRiderDeleted();
+    } catch (error) {
+      console.error("Error deleting rider:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  // delete rider
+  const deleteRider = () => {
+    return (
+      <motion.div
+        className="bg-white-500 z-50 p-6 rounded-lg shadow-lg w-[90%] max-w-lg max-h-[90vh] sm:w-[400px] transition-all duration-300 overflow-y-auto"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+      >
+        {/* CLOSE BUTTON */}
+        <button
+          className="absolute top-3 right-3 text-red-600 hover:text-red-500 text-xl"
+          onClick={() => setDeleteMode(false)}
+        >
+          X
+        </button>
+
+        {/* header */}
+        <h2 className="text-center bg-color1 text-white p-2 rounded-full">
+          Confirm delete <strong>{rider.firstname}</strong>
+        </h2>
+
+        {/* confirm message */}
+        <p className="text-center p-4">
+          This will delete <strong>{rider.firstname}</strong> details
+          permanently? <br /> You can rather deactivate the rider if you
+          don&amp;t mean to delete permanently{" "}
+        </p>
+
+        {/* CLOSE  BUTTON */}
+        <div className="mt-6 flex justify-between">
+          {/* EXPORT BUTTON */}
+          <button
+            className="bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-500"
+            onClick={() => setDeleteMode(false)}
+          >
+            Cancel
+          </button>
+
+          {/* CLOSE BUTTON */}
+          <button
+            className="bg-red-400 text-white px-4 py-2 rounded-md hover:bg-red-500"
+            onClick={() => deleteRiderRoute(rider._id)}
+          >
+            Yes
+          </button>
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <motion.div
@@ -346,7 +424,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               )}
             </motion.div>
 
-            {/* CLOSE  BUTTON */}
+            {/* BUTTONS */}
             <div className="mt-6 flex justify-between">
               {/* EXPORT BUTTON */}
               <button
@@ -363,6 +441,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               >
                 Close
               </button>
+
+              {/* DELETE BUTTON */}
+              <button
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-500"
+                onClick={() => setDeleteMode(true)}
+              >
+                Delete
+              </button>
+
+              {deleteMode && (
+                <motion.div
+                  className="fixed inset-0 flex items-center justify-center bg-black-300 backdrop-blur-md p-4"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {deleteRider()}
+                </motion.div>
+              )}
             </div>
           </>
         )}
