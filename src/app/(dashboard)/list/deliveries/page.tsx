@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { deliveriesData, ridersData } from "@/lib/data";
+import { deliveriesData } from "@/lib/data";
 import { Eye } from "lucide-react";
 import { DetailsModal } from "./DetailsModal";
 import { Delivery } from "./deliveryType";
+import { Rider } from "@/app/(dashboard)/list/riders/riderType";
 import { exportAllDeliveriesToCSV } from "@/lib/exportCSV";
 import { FaMotorcycle, FaCar } from "react-icons/fa";
 
@@ -14,6 +15,7 @@ const DeliveriesListPage = () => {
     null
   );
   const [searchInput, setSearchInput] = useState<string>("");
+  const [ridersData, setRidersData] = useState<Rider[]>([]);
   const [filteredDeliveries, setFilteredDeliveries] =
     useState<Delivery[]>(deliveriesData);
 
@@ -29,6 +31,26 @@ const DeliveriesListPage = () => {
 
     return () => clearTimeout(timeoutId);
   }, [searchInput]);
+
+  // fetch riders data from API
+
+  const fetchRiders = async () => {
+    try {
+      const response = await fetch("/api/riders", { cache: "no-store" });
+      if (!response.ok) throw new Error("Failed to fetch riders data");
+
+      const data = await response.json();
+      if (Array.isArray(data.riders)) {
+        setRidersData(data.riders);
+      }
+    } catch (error) {
+      console.error("Error fetching riders:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRiders();
+  }, []);
 
   return (
     <>
@@ -152,11 +174,15 @@ const DeliveriesListPage = () => {
           onStatusToggle={(id, updateStatus) => {
             console.log(`updated delivery ${id} to ${updateStatus}`);
           }}
-          rider={
-            ridersData.find((r) => r.id === Number(selectedDelivery.rider_id))!
-          }
-          ridersData={ridersData}
           deliveriesData={deliveriesData}
+          ridersData={ridersData}
+          rider={
+            selectedDelivery.rider
+              ? ridersData.find(
+                  (rider) => rider._id === selectedDelivery.rider?._id
+                )
+              : undefined
+          }
         />
       )}
       <div></div>
@@ -172,7 +198,7 @@ interface SearchInputProps {
 const SearchInput = ({ input, setInput }: SearchInputProps) => {
   return (
     <>
-      <div className="flex items-center border rounded-2xl bg-white p-2">
+      <div className="flex items-center border rounded-2xl bg-white p-3">
         <input
           type="text"
           className="flex-grow p-1 outline-none text-gray-400"

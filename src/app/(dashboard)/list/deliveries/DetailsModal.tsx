@@ -1,15 +1,15 @@
 import { motion } from "framer-motion";
 import { Rider } from "@/app/(dashboard)/list/riders/riderType";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Delivery } from "./deliveryType";
 import { exportDeliveryToCSV } from "@/lib/exportCSV";
 import { FaMotorcycle, FaCar } from "react-icons/fa";
 import { DistanceDisplay } from "./DistanceDisplay";
 import { Refresh } from "./Refresh";
-import { ridersData, deliveriesData } from "@/lib/data";
+import { deliveriesData } from "@/lib/data";
 
 interface DetailsModalProps {
-  rider: Rider;
+  rider?: Rider; // Make rider optional
   delivery: Delivery;
   onClose: () => void;
   onStatusToggle: (id: number, updatedStatus: string) => void;
@@ -23,6 +23,22 @@ interface DeliverySpeedGraphProps {
 
 const handleRefresh = () => {
   console.log("Refreshing...");
+};
+
+const fetchRiders = async (
+  setRidersData: React.Dispatch<React.SetStateAction<Rider[]>>
+) => {
+  try {
+    const response = await fetch("/api/riders", { cache: "no-store" });
+    if (!response.ok) throw new Error("Failed to fetch riders data");
+
+    const data = await response.json();
+    if (Array.isArray(data.riders)) {
+      setRidersData(data.riders);
+    }
+  } catch (error) {
+    console.error("Error fetching riders:", error);
+  }
 };
 
 const formatDateJoined = (isoString: string): string => {
@@ -43,10 +59,30 @@ const formatDateJoined = (isoString: string): string => {
 export const DetailsModal: React.FC<DetailsModalProps> = ({
   delivery,
   onClose,
+  rider,
+  ridersData,
 }) => {
   if (!delivery) return null;
 
-  const rider = ridersData.find((r) => r?.id === Number(delivery?.rider_id));
+  // Find associated rider if not provided directly
+  const associatedRider =
+    rider || ridersData.find((r) => r._id === delivery.rider?._id);
+
+  if (!associatedRider) {
+    return (
+      <motion.div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-md p-4">
+        <div className="bg-white p-8 rounded-lg shadow-lg">
+          <p>No rider assigned to this delivery</p>
+          <button
+            className="mt-4 bg-color1/40 text-white px-3 py-1.5 rounded-md"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   const getPackageSizeBox = (size: string) => {
     return (
@@ -269,7 +305,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
           </div>
           <div>
             <p className="font-semibold text-lg text-color1">
-              {rider?.firstname} {rider?.lastname}
+              {associatedRider.firstname} {associatedRider.lastname}
             </p>
             <div className="flex items-center space-x-1">
               {Array(5)
@@ -278,7 +314,9 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
                   <span
                     key={i}
                     className={`text-color1/40 ${
-                      i < (rider?.ratings ?? 0) ? "opacity-100" : "opacity-20"
+                      i < (associatedRider.ratings ?? 0)
+                        ? "opacity-100"
+                        : "opacity-20"
                     }`}
                   >
                     ★

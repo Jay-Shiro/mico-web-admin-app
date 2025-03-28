@@ -1,3 +1,5 @@
+import { Rider } from "../riders/riderType";
+
 export type Delivery = {
   id: string;
   user_id: string;
@@ -19,5 +21,5 @@ export type Delivery = {
     last_updated: string;
   };
   last_updated: string;
-  rider_id: string;
+  rider?: Rider; // Make rider optional
 };
