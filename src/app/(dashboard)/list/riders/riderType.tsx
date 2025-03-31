@@ -5,7 +5,7 @@ export type Rider = {
   gender: string;
   email: string;
   phone: string;
-  facial_photo_url: string;
+  facial_picture_url: string;
   homeaddressdetails: string;
   earnings: number;
   nin: string;

@@ -4,15 +4,11 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "images.pexels.com",
-      },
-      {
-        protocol: "https",
-        hostname: "ichef.bbci.co.uk",
-      },
-      {
-        protocol: "https",
         hostname: "deliveryapi-ten.vercel.app",
+      },
+      {
+        protocol: "https",
+        hostname: "deliveryapi-plum.vercel.app",
       },
     ],
   },

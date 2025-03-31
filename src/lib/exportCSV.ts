@@ -12,7 +12,7 @@ export const exportToCSV = (rider: Rider) => {
     ["Field", "Value"],
     ["ID", rider._id],
     ["Name", `${rider.firstname} ${rider.lastname}`],
-    ["Photo Url", rider.facial_photo_url],
+    ["Photo Url", rider.facial_picture_url],
     ["Gender", rider.gender],
     ["Email", rider.email],
     ["Phone", rider.phone],
@@ -87,7 +87,7 @@ export const exportAllRidersToCSV = (riders: Rider[]) => {
 
   const csvData = riders.map((rider) => [
     rider._id,
-    rider.facial_photo_url,
+    rider.facial_picture_url,
     `${rider.firstname} ${rider.lastname}`,
     rider.gender,
     rider.email,
