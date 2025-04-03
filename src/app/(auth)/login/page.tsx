@@ -65,7 +65,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200">
       <div className="w-full max-w-[400px] p-8 bg-white rounded-2xl shadow-xl mx-4">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-color1 to-color2/50 text-transparent bg-clip-text">
+          <h1 className="text-5xl font-bold bg-color1 text-transparent bg-clip-text">
             MICO<span className="text-xs">admin</span>
           </h1>
           <p className="text-slate-600 mt-2">Welcome back</p>
@@ -95,7 +95,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full p-4 bg-gradient-to-r from-color2 to-color1 text-white rounded-xl hover:opacity-90 disabled:opacity-50"
+            className="w-full p-4 bg-color1 text-white rounded-xl hover:opacity-90 disabled:opacity-50"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>

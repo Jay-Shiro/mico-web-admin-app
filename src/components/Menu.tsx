@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation"; // Import usePathname
 
 const menuItems = [
   {
@@ -69,6 +70,7 @@ const menuItems = [
 const Menu = () => {
   const { data: session } = useSession();
   const userRole = session?.user?.role || "";
+  const pathname = usePathname(); // Get the current route
 
   return (
     <div className="mt-4 text-sm">
@@ -79,11 +81,14 @@ const Menu = () => {
           </span>
           {i.items.map((item) => {
             if (item.visible.includes(userRole)) {
+              const isActive = pathname === item.href; // Check if the current route matches the item's href
               return (
                 <Link
                   href={item.href}
                   key={item.label}
-                  className="flex items-center justify-center lg:justify-start gap-4 text-gray-600 py-2 md:px-2 rounded-md hover:bg-color1lite"
+                  className={`flex items-center justify-center lg:justify-start gap-4 text-gray-600 py-2 md:px-2 rounded-md hover:bg-color1lite ${
+                    isActive ? "bg-color1 text-white" : ""
+                  }`}
                 >
                   <Image src={item.icon} alt="" width={20} height={20} />
                   <span className="hidden lg:block">{item.label}</span>
