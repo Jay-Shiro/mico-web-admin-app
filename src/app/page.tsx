@@ -7,7 +7,7 @@ const Homepage = () => {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
       {/* Header Section */}
       <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800">Welcome to Micos Admin</h1>
+        <h1 className="text-4xl font-bold text-gray-800">Welcome to Mico Admin</h1>
         <p className="text-lg text-gray-600 mt-2">
           Manage your dashboard efficiently with our powerful tools.
         </p>
