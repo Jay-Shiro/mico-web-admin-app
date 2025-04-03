@@ -2,12 +2,12 @@
   "name": "lama-dev-next-dashboard",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+ "scripts": {
+  "dev": "next dev",
+  "build": "NODE_ENV=production next build",
+  "start": "next start",
+  "lint": "next lint"
+},
   "dependencies": {
     "framer-motion": "^12.5.0",
     "lucide-react": "^0.483.0",
