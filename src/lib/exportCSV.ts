@@ -62,6 +62,7 @@ export const exportAllRidersToCSV = (riders: Rider[]) => {
   }
 
   const headers = [
+    "S/N",
     "ID",
     "photo_url",
     "Name",
@@ -85,7 +86,8 @@ export const exportAllRidersToCSV = (riders: Rider[]) => {
     "Riders License",
   ];
 
-  const csvData = riders.map((rider) => [
+  const csvData = riders.map((rider, index) => [
+    index + 1,
     rider._id,
     rider.facial_picture_url,
     `${rider.firstname} ${rider.lastname}`,
