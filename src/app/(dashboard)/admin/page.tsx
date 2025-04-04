@@ -2,8 +2,8 @@ import UserCard from '../../../components/UserCard';
 import CountChart from '../../../components/CountChart';
 import PaymentsChart from '@/components/PaymentsChart';
 import FinanceChart from '@/components/FinanceChart';
-import EventCalendar from '@/components/EventCalendar';
-import Announcements from '@/components/Announcements';
+// import EventCalendar from '@/components/EventCalendar';
+// import Announcements from '@/components/Announcements';
 const AdminPage = () => {
   return (
     <div className='p-4 flex gap-4 flex-col md:flex-row'>
@@ -34,8 +34,8 @@ const AdminPage = () => {
       </div>
       {/* RIGHT*/}
       <div className='w-full lg:w-1/3 flex flex-col gap-8'>
-      <EventCalendar/>
-      <Announcements/>
+      {/* <EventCalendar/> */}
+      {/* <Announcements/> */}
       </div>
     </div>
   )

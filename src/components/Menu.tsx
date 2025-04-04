@@ -2,8 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation"; // Import usePathname
+
+const handleLogout = async () => {
+  await signOut({ callbackUrl: "/login" });
+};
 
 const menuItems = [
   {
@@ -56,12 +60,12 @@ const menuItems = [
         href: "/settings",
         visible: ["admin", "account", "support"],
       },
-
       {
         icon: "/logout.png",
         label: "Logout",
-        href: "/logout",
+        href: "#", // No navigation for logout
         visible: ["admin", "account", "support"],
+        onClick: handleLogout, // Attach the handleLogout function
       },
     ],
   },
@@ -82,6 +86,21 @@ const Menu = () => {
           {i.items.map((item) => {
             if (item.visible.includes(userRole)) {
               const isActive = pathname === item.href; // Check if the current route matches the item's href
+
+              // Special case for Logout
+              if (item.label === "Logout") {
+                return (
+                  <div
+                    key={item.label}
+                    onClick={item.onClick} // Trigger handleLogout
+                    className="flex items-center justify-center lg:justify-start gap-4 text-gray-600 py-2 md:px-2 rounded-md hover:bg-color1lite cursor-pointer"
+                  >
+                    <Image src={item.icon} alt="" width={20} height={20} />
+                    <span className="hidden lg:block">{item.label}</span>
+                  </div>
+                );
+              }
+
               return (
                 <Link
                   href={item.href}

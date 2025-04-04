@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 
-const BASE_URL =
-  process.env.NEXT_API_BASE_URL || "https://deliveryapi-ten.vercel.app";
-
 export async function GET() {
   try {
-    const response = await fetch(`${BASE_URL}/deliveries`, {
+    const response = await fetch(`${process.env.NEXT_API_BASE_URL}/deliveries`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -21,6 +18,15 @@ export async function GET() {
     }
 
     const data = await response.json();
+
+    // Handle case where no deliveries are found
+    if (!data.deliveries || data.deliveries.length === 0) {
+      return NextResponse.json(
+        { status: "success", message: "No deliveries found", deliveries: [] },
+        { status: 200 }
+      );
+    }
+
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("Error fetching deliveries: ", error);

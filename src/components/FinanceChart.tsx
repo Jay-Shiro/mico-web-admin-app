@@ -1,90 +1,74 @@
 "use client"
-import Image from 'next/image'
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const data = [
-  {
-    name: 'Jan',
-    Profit: 4000,
-    Revenue: 2400,
-    amt: 2400,
-  },
-  {
-    name: 'Feb',
-    Profit: 3000,
-    Revenue: 1398,
-    amt: 2210,
-  },
-  {
-    name: 'Mar',
-    Profit: 2000,
-    Revenue: 9800,
-    amt: 2290,
-  },
-  {
-    name: 'Apr',
-    Profit: 2780,
-    Revenue: 3908,
-    amt: 2000,
-  },
-  {
-    name: 'May',
-    Profit: 1890,
-    Revenue: 4800,
-    amt: 2181,
-  },
-  {
-    name: 'Jun',
-    Profit: 2390,
-    Revenue: 3800,
-    amt: 2500,
-  },
-  {
-    name: 'Jul',
-    Profit: 3490,
-    Revenue: 4300,
-    amt: 2100,
-  },
-  {
-    name: 'Aug',
-    Profit: 3490,
-    Revenue: 4300,
-    amt: 2100,
-  },
-  {
-    name: 'Sep',
-    Profit: 3490,
-    Revenue: 4300,
-    amt: 2100,
-  },
-  {
-    name: 'Oct',
-    Profit: 3490,
-    Revenue: 4300,
-    amt: 2100,
-  },
-  {
-    name: 'Nov',
-    Profit: 3490,
-    Revenue: 4300,
-    amt: 2100,
-  },
-  {
-    name: 'Dec',
-    Profit: 3490,
-    Revenue: 4300,
-    amt: 2100,
-  },
-  
-];
+// Define types for the delivery data and transformed chart data
+interface Delivery {
+  transaction_info: {
+    payment_date: string;
+  };
+  price: number;
+}
+
+interface ChartData {
+  name: string;
+  Revenue: number;
+  Profit: number;
+}
+
 const FinanceChart = () => {
+  const [data, setData] = useState<ChartData[]>([]);
+
+  useEffect(() => {
+    const fetchDeliveries = async () => {
+      try {
+        const response = await fetch('/api/deliveries', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch deliveries: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        const transformedData = result.deliveries.reduce((acc: ChartData[], delivery: Delivery): ChartData[] => {
+          const month = new Date(delivery.transaction_info.payment_date).toLocaleDateString('en-US', { month: 'short' });
+        
+          const existingMonth = acc.find((item) => item.name === month);
+          if (existingMonth) {
+            existingMonth.Revenue = (existingMonth.Revenue || 0) + delivery.price;
+            existingMonth.Profit = (existingMonth.Profit || 0) + delivery.price * 0.2; // Assuming 20% profit margin
+          } else {
+            acc.push({
+              name: month,
+              Revenue: delivery.price,
+              Profit: delivery.price * 0.2, // Assuming 20% profit margin
+            });
+          }
+        
+          return acc;
+        }, []);
+
+        setData(transformedData);
+      } catch (error) {
+        console.error('Error fetching deliveries:', error);
+      }
+    };
+
+    fetchDeliveries();
+  }, []);
+
   return (
     <div className='bg-white rounded-lg w-full h-full p-4'>
-        <div className='flex justify-between items-center'>
-            <h1 className='text-lg font-semibold'>Finance</h1>
-            <Image src="/moreDark.png" alt="" width={20} height={20} />
-        </div>
-        <ResponsiveContainer width="100%" height="90%">
+      <div className='flex justify-between items-center'>
+        <h1 className='text-lg font-semibold'>Finance</h1>
+        <Image src="/moreDark.png" alt="" width={20} height={20} />
+      </div>
+      <ResponsiveContainer width="100%" height="90%">
         <LineChart
           width={500}
           height={300}
@@ -106,7 +90,7 @@ const FinanceChart = () => {
         </LineChart>
       </ResponsiveContainer>
     </div>
-  )
-}
+  );
+};
 
-export default FinanceChart
+export default FinanceChart;

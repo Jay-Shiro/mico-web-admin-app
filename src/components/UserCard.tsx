@@ -8,6 +8,9 @@ const UserCard = ({ type }: { type: string }) => {
   const [riderLoading, setRiderLoading] = useState(true);
   const [deliveryCount, setDeliveryCount] = useState<number>(0);
   const [deliveryLoading, setDeliveryLoading] = useState(true);
+  const [cashPayments, setCashPayments] = useState<number>(0);
+  const [onlinePayments, setOnlinePayments] = useState<number>(0);
+  const [paymentLoading, setPaymentLoading] = useState(true);
 
   useEffect(() => {
     if (type === "Riders") {
@@ -26,17 +29,34 @@ const UserCard = ({ type }: { type: string }) => {
       fetchRiders();
     }
 
-    if (type === "Deliveries") {
+    if (type === "Deliveries" || type === "Cash Payments" || type === "Online Payments") {
       const fetchDeliveries = async () => {
         try {
           const response = await fetch("/api/deliveries");
           if (!response.ok) throw new Error("Failed to fetch deliveries");
           const data = await response.json();
+
+          // Calculate total cash and online payments
+          const totals = data.deliveries.reduce(
+            (acc: { cash: number; online: number }, delivery: { transactiontype: string; price: number }) => {
+              if (delivery.transactiontype.toLowerCase() === "cash") {
+                acc.cash += delivery.price;
+              } else if (delivery.transactiontype.toLowerCase() === "online") {
+                acc.online += delivery.price;
+              }
+              return acc;
+            },
+            { cash: 0, online: 0 }
+          );
+
           setDeliveryCount(data.deliveries?.length || 0);
+          setCashPayments(totals.cash);
+          setOnlinePayments(totals.online);
         } catch (error) {
           console.error("Error:", error);
         } finally {
           setDeliveryLoading(false);
+          setPaymentLoading(false);
         }
       };
       fetchDeliveries();
@@ -50,8 +70,9 @@ const UserCard = ({ type }: { type: string }) => {
       case "Deliveries":
         return deliveryLoading ? "..." : deliveryCount;
       case "Cash Payments":
+        return paymentLoading ? "..." : cashPayments.toLocaleString();
       case "Online Payments":
-        return "2,345"; // Placeholder for payments
+        return paymentLoading ? "..." : onlinePayments.toLocaleString();
       default:
         return "0";
     }
