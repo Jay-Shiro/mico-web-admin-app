@@ -192,6 +192,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     );
   };
 
+  const transformImageUrl = (url: string | null) => {
+    if (!url) return "/placeholder.jpg";
+
+    // Extract the ID from the URL
+    const id = url.split("/files/").pop();
+
+    // Construct new URL with "ten" instead of "plum"
+    return `https://deliveryapi-ten.vercel.app/files/${id}`;
+  };
+
   return (
     <motion.div
       className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-md p-4"
@@ -241,7 +251,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             {/* PROFILE IMAGE */}
             <div className="mt-12 justify-center flex">
               <Image
-                src={rider.facial_picture_url || "/placeholder.jpg"}
+                src={
+                  transformImageUrl(rider.facial_picture_url) ||
+                  "/placeholder.jpg"
+                }
                 alt={`${rider.firstname} ${rider.lastname}`}
                 width={100}
                 height={100}
@@ -365,7 +378,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       onClick={() =>
                         setSelectedImage(
                           doc.url
-                            ? `https://deliveryapi-plum.vercel.app/files/${doc.url}`
+                            ? `https://deliveryapi-ten.vercel.app/files/${doc.url}`
                             : `/placeholder.jpeg`
                         )
                       }
@@ -373,7 +386,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                       <Image
                         src={
                           doc.url
-                            ? `https://deliveryapi-plum.vercel.app/files/${doc.url}`
+                            ? `https://deliveryapi-ten.vercel.app/files/${doc.url}`
                             : `/placeholder.jpeg`
                         }
                         alt={doc.label}

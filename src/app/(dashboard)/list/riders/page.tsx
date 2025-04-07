@@ -287,6 +287,16 @@ const RidersListPage = () => {
     setRiderIds(!selectedAll ? filteredRiders.map((rider) => rider._id) : []);
   };
 
+  const transformImageUrl = (url: string | null) => {
+    if (!url) return "/placeholder.jpg";
+
+    // Extract the ID from the URL
+    const id = url.split("/files/").pop();
+
+    // Construct new URL with "ten" instead of "plum"
+    return `https://deliveryapi-ten.vercel.app/files/${id}`;
+  };
+
   return (
     <>
       {/*TOP*/}
@@ -407,7 +417,10 @@ const RidersListPage = () => {
                   {/* PROFILE IMAGE */}
                   <div className="flex justify-center">
                     <Image
-                      src={rider.facial_picture_url || "/placeholder.jpg"}
+                      src={
+                        transformImageUrl(rider.facial_picture_url) ||
+                        "/placeholder.jpg"
+                      }
                       alt={`${rider.firstname} ${rider.lastname}`}
                       className="w-10 h-10 md:w-12 md:h-12 rounded-full object-cover"
                       width={40}

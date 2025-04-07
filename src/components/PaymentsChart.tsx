@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Link from 'next/link';
 
-const PaymentsChart = () => {
+const PaymentsChart = ({ link }: { link: string }) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
@@ -51,7 +52,9 @@ const PaymentsChart = () => {
     <div className='bg-white rounded-lg w-full h-full p-4'>
       <div className='flex justify-between items-center'>
         <h1 className='text-lg font-semibold'>Payments</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+        <Link href={link}>
+        <Image src="/more.png" alt="" width={20} height={20}/>
+        </Link>
       </div>
       <ResponsiveContainer width="100%" height="90%">
         <BarChart

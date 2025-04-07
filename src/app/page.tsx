@@ -1,40 +1,45 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 
 const Homepage = () => {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-      {/* Header Section */}
-      <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-800">Welcome to Mico Admin</h1>
-        <p className="text-lg text-gray-600 mt-2">
-          Manage your dashboard efficiently with our powerful tools.
+    <main className="min-h-screen bg-gradient-to-br from-color1 to-color1lite flex flex-col items-center justify-center text-white font-sans px-6">
+      
+      {/* Hero Section */}
+      <section className="text-center mb-20 animate-fade-in">
+        <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight drop-shadow-xl leading-tight">
+          Mico <span className="text-color4">Admin</span>
+        </h1>
+        <p className="text-lg sm:text-xl mt-4 max-w-2xl mx-auto text-color3lite">
+          Log in to manage admin tasks
         </p>
-      </header>
+      </section>
 
-      {/* Main Content */}
-      <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-4">Admin Login</h2>
-        <p className="text-gray-500 mb-6">
-          Please log in to access the admin dashboard.
+      {/* Login Card */}
+      <section className="w-full max-w-md bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-8 sm:p-10 shadow-2xl transition-transform duration-300 hover:scale-[1.02]">
+        <h2 className="text-3xl font-semibold text-center text-color1 mb-4">
+          Admin Login
+        </h2>
+        <p className="text-center text-white mb-6">
+          Click below to access, filtered by your admin role
         </p>
         <button
-          className="w-full bg-color1 text-white py-2 px-4 rounded-lg hover:bg-color1/80 transition duration-300"
-          onClick={() => {
-            // Redirect to login page
-            window.location.href = '/login';
-          }}
+          onClick={() => (window.location.href = "/login")}
+          className="w-full bg-color1 text-white py-3 px-6 rounded-xl font-semibold text-lg hover:bg-color4lite transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-color4"
         >
           Login
         </button>
-      </div>
+      </section>
 
-      {/* Footer Section */}
-      <footer className="mt-12 text-gray-500 text-sm">
-        © {new Date().getFullYear()} Mico Admin. All rights  reserved.
+      {/* Footer */}
+      <footer className="mt-20 text-sm text-color3lite text-center animate-fade-in-down">
+        <p>
+          © {new Date().getFullYear()}{" "}
+          <span className="font-semibold">Mico Admin</span>. All rights reserved.
+        </p>
       </footer>
-    </div>
+    </main>
   );
 };
 

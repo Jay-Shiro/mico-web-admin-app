@@ -1,9 +1,10 @@
 "use client";
 
+import { Link } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-const UserCard = ({ type }: { type: string }) => {
+const UserCard = ({ type, link }: { type: string, link: string }) => {
   const [riderCount, setRiderCount] = useState<number>(0);
   const [riderLoading, setRiderLoading] = useState(true);
   const [deliveryCount, setDeliveryCount] = useState<number>(0);
@@ -84,7 +85,9 @@ const UserCard = ({ type }: { type: string }) => {
         <span className="text-[10px] bg-white px-2 py-1 rounded-full text-green-600 md:w-[4%]">
           2024/2025
         </span>
-        <Image src="/more.png" alt="" width={20} height={20} />
+        <Link href={link}>
+        <Image src="/more.png" alt="" width={20} height={20}/>
+        </Link>
       </div>
       <h1 className="text-2xl font-semibold my-4">{getValue()}</h1>
       <h2 className="capitalize text-sm font-medium text-gray-500">{type}</h2>

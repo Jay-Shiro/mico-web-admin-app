@@ -26,11 +26,35 @@ export default withAuth(
           return NextResponse.redirect(new URL("/", req.url));
         }
         break;
-      case "support":
-        if (token.role !== "admin" && token.role !== "support") {
-          return NextResponse.redirect(new URL("/", req.url));
+      case "list/riders":
+        if (token.role !== "admin") {
+          return NextResponse.redirect(new URL("/unauthorized", req.url));
         }
         break;
+      case "list/tracking":
+        if (token.role !== "admin" && token.role !== "account") {
+          return NextResponse.redirect(new URL("/unauthorized", req.url));
+        }
+        break;
+      case "list/deliveries":
+        if (token.role !== "account") {
+          return NextResponse.redirect(new URL("/unauthorized", req.url));
+        }
+        break;
+      case "support":
+        if (token.role !== "support") {
+          return NextResponse.redirect(new URL("/unauthorized", req.url));
+        }
+        break;
+      case "settings":
+        if (token.role !== "admin") {
+          return NextResponse.redirect(new URL("/unauthorized", req.url)); // Redirect unauthorized users
+        }
+        break;
+      case "profile":
+        if (!["admin", "account", "support"].includes(token.role)) {
+          return NextResponse.redirect(new URL("/", req.url)); // Redirect unauthorized users
+        }
       case "login":
         // Redirect authenticated users away from login
         return NextResponse.redirect(new URL("/", req.url));

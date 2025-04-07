@@ -16,7 +16,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           const formData = new URLSearchParams();
-          formData.append("username", credentials.username.toLowerCase());
+          formData.append("username", credentials.username);
           formData.append("password", credentials.password);
 
           const res = await fetch(

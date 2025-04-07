@@ -17,7 +17,7 @@ const menuItems = [
         icon: "/home.png",
         label: "Home",
         href: "/admin",
-        visible: ["admin", "account"],
+        visible: ["admin", "account", "support"],
       },
       {
         icon: "/riders.png",
@@ -28,7 +28,7 @@ const menuItems = [
       {
         icon: "/tracking.png",
         label: "Tracking",
-        href: "/",
+        href: "/list/tracking",
         visible: ["admin", "support"],
       },
       {
@@ -36,12 +36,6 @@ const menuItems = [
         label: "Deliveries",
         href: "/list/deliveries",
         visible: ["account"],
-      },
-      {
-        icon: "/chat.png",
-        label: "Chat",
-        href: "/support",
-        visible: ["support"],
       },
     ],
   },
@@ -58,12 +52,12 @@ const menuItems = [
         icon: "/setting.png",
         label: "Settings",
         href: "/settings",
-        visible: ["admin", "account", "support"],
+        visible: ["admin"],
       },
       {
         icon: "/logout.png",
         label: "Logout",
-        href: "#", // No navigation for logout
+        href: "#", 
         visible: ["admin", "account", "support"],
         onClick: handleLogout, // Attach the handleLogout function
       },

@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 interface RiderStats {
   total: number;
@@ -78,7 +79,9 @@ const CountChart = () => {
       {/*TITLE*/}
       <div className="flex justify-between items-center">
         <h1 className="text-lg font-semibold">Riders</h1>
-        <Image src="/moreDark.png" alt="" width={20} height={20} />
+        <Link href="/list/riders">
+        <Image src="/more.png" alt="" width={20} height={20}/>
+        </Link>
       </div>
       {/*CHART*/}
       <div className="relative w-full h-[75%]">
