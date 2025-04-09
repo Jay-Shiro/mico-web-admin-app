@@ -36,6 +36,7 @@ export async function GET() {
       throw new Error("Failed to fetch required data");
     }
 
+    // Parse responses
     const { deliveries }: { deliveries: DeliveryType[] } =
       await deliveriesRes.json();
     const { users }: { users: User[] } = await usersRes.json();
@@ -59,22 +60,17 @@ export async function GET() {
       },
     }));
 
-    // Handle case where no deliveries are found
-    if (!transformedDeliveries || transformedDeliveries.length === 0) {
-      return NextResponse.json(
-        { status: "success", message: "No deliveries found", deliveries: [] },
-        { status: 200 }
-      );
-    }
-
     return NextResponse.json(
-      { status: "success", deliveries: transformedDeliveries },
+      {
+        status: "success",
+        deliveries: transformedDeliveries,
+      },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching deliveries: ", error);
+    console.error("Error fetching transactions: ", error);
     return NextResponse.json(
-      { error: "Failed to fetch deliveries data" },
+      { error: "Failed to fetch transactions data" },
       { status: 500 }
     );
   }

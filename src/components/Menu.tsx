@@ -32,6 +32,12 @@ const menuItems = [
         visible: ["admin", "support"],
       },
       {
+        icon: "/transactions.png",
+        label: "Transactions",
+        href: "/list/transactions",
+        visible: ["admin", "account", "support"],
+      },
+      {
         icon: "/delivery.png",
         label: "Deliveries",
         href: "/list/deliveries",
@@ -57,7 +63,7 @@ const menuItems = [
       {
         icon: "/logout.png",
         label: "Logout",
-        href: "#", 
+        href: "#",
         visible: ["admin", "account", "support"],
         onClick: handleLogout, // Attach the handleLogout function
       },

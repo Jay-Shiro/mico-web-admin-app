@@ -41,7 +41,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
     setLoading(true);
 
     try {
-      console.log(`Fetching updated details for Rider: ${riderId}`);
       const response = await fetch(`/api/riders/${riderId}`, {
         method: "GET",
         headers: {
@@ -53,7 +52,6 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       const data = await response.json();
 
       if (data.status === "success" && data.rider) {
-        console.log("Rider Status:", data.rider.status);
         setRider(data.rider);
       }
     } catch (error) {
@@ -112,9 +110,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // debug state loads
-  useEffect(() => {
-    console.log("Updated Rider:", rider); // Check if state updates after toggle
-  }, [rider]);
+  useEffect(() => {}, [rider]);
 
   async function deleteRiderRoute(riderId: string) {
     setIsUpdating(true);

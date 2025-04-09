@@ -1,5 +1,5 @@
 import { Rider } from "@/app/(dashboard)/list/riders/riderType";
-import { Delivery } from "@/app/(dashboard)/list/deliveries/deliveryType";
+import { DeliveryType } from "@/app/(dashboard)/list/tracking/deliveryType";
 // ####################################### RIDERS EXPORT ################################################################
 
 export const exportToCSV = (rider: Rider) => {
@@ -136,30 +136,32 @@ export const exportAllRidersToCSV = (riders: Rider[]) => {
 
 // ####################################### DELIVERIES EXPORT ################################################################
 
-export const exportDeliveryToCSV = (delivery: Delivery) => {
+export const exportDeliveryToCSV = (delivery: DeliveryType) => {
   const csvData = [
     [
       `Delivery ID ${
-        delivery.id
+        delivery._id
       } Details downloaded on ${new Date().toLocaleDateString()}`,
     ],
     ["Field", "Value"],
-    ["ID", delivery.id],
-    ["User Id", delivery.user_id],
+    ["ID", delivery._id],
+    ["User ID", delivery.user_id],
     ["Price", delivery.price],
     ["Distance", delivery.distance],
     ["Startpoint", delivery.startpoint],
     ["Endpoint", delivery.endpoint],
     ["Vehicle Type", delivery.vehicletype],
     ["Transaction Type", delivery.transactiontype],
-    ["Package Size", delivery.packagesize],
+    ["Package Size", delivery.packagesize || "N/A"],
     ["Delivery Speed", delivery.deliveryspeed],
-    ["Status", delivery.status.current],
-    ["Status Timestamp", delivery.status.timestamp],
-    ["Payment Status", delivery.transaction_info.payment_status],
-    ["Payment_date", delivery.transaction_info.payment_date],
-    ["Payment_last_updated", delivery.transaction_info.last_updated],
-    ["Last Updated", delivery.last_updated],
+    ["Status - Delivery", delivery.status.deliverystatus],
+    ["Status - Order", delivery.status.orderstatus],
+    ["Rider ID", delivery.status.riderid || "N/A"],
+    ["Payment Status", delivery.status.transactioninfo.status],
+    ["Payment Method", delivery.status.transactioninfo.payment_method || "N/A"],
+    ["Payment ID", delivery.status.transactioninfo.payment_id || "N/A"],
+    ["Payment Date", delivery.status.transactioninfo.payment_date || "N/A"],
+    ["Last Updated", delivery.last_updated || "N/A"],
   ];
 
   const csvContent =
@@ -168,22 +170,22 @@ export const exportDeliveryToCSV = (delivery: Delivery) => {
   const encodeUri = encodeURI(csvContent);
   const link = document.createElement("a");
   link.setAttribute("href", encodeUri);
-  link.setAttribute("download", `delivery_${delivery.id}.csv`);
+  link.setAttribute("download", `delivery_${delivery._id}.csv`);
   document.body.appendChild(link);
 
-  // download button trigger
   link.click();
   document.body.removeChild(link);
 };
 
-export const exportAllDeliveriesToCSV = (deliveries: Delivery[]) => {
+export const exportAllDeliveriesToCSV = (deliveries: DeliveryType[]) => {
   if (!deliveries || deliveries.length === 0) {
     alert("No deliveries available to export");
+    return;
   }
 
   const headers = [
     "ID",
-    "User Id",
+    "User ID",
     "Price",
     "Distance",
     "Startpoint",
@@ -192,16 +194,16 @@ export const exportAllDeliveriesToCSV = (deliveries: Delivery[]) => {
     "Transaction Type",
     "Package Size",
     "Delivery Speed",
-    "Status",
-    "Status Timestamp",
+    "Delivery Status",
+    "Order Status",
+    "Rider ID",
     "Payment Status",
-    "Payment_date",
-    "Payment_last_updated",
+    "Payment Method",
     "Last Updated",
   ];
 
   const csvData = deliveries.map((delivery) => [
-    delivery.id,
+    delivery._id,
     delivery.user_id,
     delivery.price,
     delivery.distance,
@@ -209,14 +211,14 @@ export const exportAllDeliveriesToCSV = (deliveries: Delivery[]) => {
     delivery.endpoint,
     delivery.vehicletype,
     delivery.transactiontype,
-    delivery.packagesize,
+    delivery.packagesize || "N/A",
     delivery.deliveryspeed,
-    delivery.status.current,
-    delivery.status.timestamp,
-    delivery.transaction_info.payment_status,
-    delivery.transaction_info.payment_date,
-    delivery.transaction_info.last_updated,
-    delivery.last_updated,
+    delivery.status.deliverystatus,
+    delivery.status.orderstatus,
+    delivery.status.riderid || "N/A",
+    delivery.status.transactioninfo.status,
+    delivery.status.transactioninfo.payment_method || "N/A",
+    delivery.last_updated || "N/A",
   ]);
 
   const csvContent = [
@@ -234,7 +236,46 @@ export const exportAllDeliveriesToCSV = (deliveries: Delivery[]) => {
   );
   document.body.appendChild(link);
 
-  // download button trigger
   link.click();
   document.body.removeChild(link);
+};
+
+// ####################################### TRANSACTIONS EXPORT ################################################################
+
+export const exportTransactionToCSV = (transaction: DeliveryType) => {
+  const csvData = [
+    [`Transaction Details downloaded on ${new Date().toLocaleDateString()}`],
+    ["Field", "Value"],
+    ["ID", transaction._id],
+    [
+      "Date",
+      new Date(
+        transaction.transaction_info?.payment_date || ""
+      ).toLocaleString(),
+    ],
+    ["Amount", `₦${transaction.price.toFixed(2)}`],
+    ["Payment Type", transaction.transactiontype],
+    ["Delivery Status", transaction.status.deliverystatus],
+    ["Order Status", transaction.status.orderstatus],
+    [
+      "Rider",
+      transaction.rider
+        ? `${transaction.rider.firstname} ${transaction.rider.lastname}`
+        : "Unassigned",
+    ],
+    ["Customer", transaction.user_id],
+    ["Start Point", transaction.startpoint],
+    ["End Point", transaction.endpoint],
+    ["Vehicle Type", transaction.vehicletype],
+    ["Package Size", transaction.packagesize || "N/A"],
+    ["Delivery Speed", transaction.deliveryspeed],
+    ["Last Updated", transaction.last_updated || "N/A"],
+  ];
+
+  const csvContent = csvData.map((row) => row.join(",")).join("\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `transaction_${transaction._id}_${Date.now()}.csv`;
+  link.click();
 };

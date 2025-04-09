@@ -26,8 +26,6 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
 
     try {
-      console.log("Attempting login with username:", username);
-
       const res = await signIn("credentials", {
         username,
         password,

@@ -1,20 +1,19 @@
 import { motion } from "framer-motion";
-import { Rider } from "@/app/(dashboard)/list/riders/riderType";
-import React, { useState, useEffect } from "react";
-import { Delivery } from "./deliveryType";
+import React from "react";
+import { DeliveryType } from "./deliveryType";
 import { exportDeliveryToCSV } from "@/lib/exportCSV";
 import { FaMotorcycle, FaCar } from "react-icons/fa";
 import { DistanceDisplay } from "./DistanceDisplay";
 import { Refresh } from "./Refresh";
-import { deliveriesData } from "@/lib/data";
+import { Rider } from "@/app/(dashboard)/list/riders/riderType";
 
 interface DetailsModalProps {
-  rider?: Rider; // Make rider optional
-  delivery: Delivery;
+  delivery: DeliveryType;
   onClose: () => void;
-  onStatusToggle: (id: number, updatedStatus: string) => void;
+  onStatusToggle: (id: string, updateStatus: string) => void;
+  deliveriesData: DeliveryType[]; // Added this line
   ridersData: Rider[];
-  deliveriesData: Delivery[];
+  rider?: Rider;
 }
 
 interface DeliverySpeedGraphProps {
@@ -25,23 +24,8 @@ const handleRefresh = () => {
   console.log("Refreshing...");
 };
 
-const fetchRiders = async (
-  setRidersData: React.Dispatch<React.SetStateAction<Rider[]>>
-) => {
-  try {
-    const response = await fetch("/api/riders", { cache: "no-store" });
-    if (!response.ok) throw new Error("Failed to fetch riders data");
-
-    const data = await response.json();
-    if (Array.isArray(data.riders)) {
-      setRidersData(data.riders);
-    }
-  } catch (error) {
-    console.error("Error fetching riders:", error);
-  }
-};
-
-const formatDateJoined = (isoString: string): string => {
+const formatDateJoined = (isoString: string | null): string => {
+  if (!isoString) return "N/A";
   const date = new Date(isoString);
 
   const day = date.getDate().toString().padStart(2, "0");
@@ -59,35 +43,12 @@ const formatDateJoined = (isoString: string): string => {
 export const DetailsModal: React.FC<DetailsModalProps> = ({
   delivery,
   onClose,
-  rider,
-  ridersData,
 }) => {
   if (!delivery) return null;
 
-  // Find associated rider if not provided directly
-  const associatedRider =
-    rider || ridersData.find((r) => r._id === delivery.rider?._id);
-
-  if (!associatedRider) {
-    return (
-      <motion.div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-md p-4">
-        <div className="bg-white p-8 rounded-lg shadow-lg">
-          <p>No rider assigned to this delivery</p>
-          <button
-            className="mt-4 bg-color1/40 text-white px-3 py-1.5 rounded-md"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  const getPackageSizeBox = (size: string) => {
+  const getPackageSizeBox = (size?: string) => {
     return (
       <div className="relative flex flex-col items-center group">
-        {/* Box */}
         <motion.div
           initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -98,18 +59,16 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
             <rect width="40" height="40" fill="#D1D5DB" />
           </svg>
         </motion.div>
-
-        {/* Label for Mobile */}
-        <span className="text-color2/60 text-sm md:hidden">{size}</span>
-
-        {/* Label for Desktop */}
+        <span className="text-color2/60 text-sm md:hidden">
+          {size || "N/A"}
+        </span>
         <motion.div
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2, ease: "easeOut" }}
           className="bottom-full mt-3 bg-color2/70 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
         >
-          {size}
+          {size || "N/A"}
         </motion.div>
       </div>
     );
@@ -118,8 +77,8 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
   const DeliverySpeedGraph: React.FC<DeliverySpeedGraphProps> = ({ speed }) => {
     const curvePath =
       speed === "standard"
-        ? "M 10 40 Q 50, 90 90 40" // standard
-        : "M 10 40 Q 80, 10 90 40"; // express
+        ? "M 10 40 Q 50, 90 90 40"
+        : "M 10 40 Q 80, 10 90 40";
 
     return (
       <div className="relative flex flex-col items-center">
@@ -148,15 +107,15 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
     );
   };
 
-  const formatTransactionInfo = (
-    transactionInfo: Delivery["transaction_info"]
-  ) => {
-    if (!transactionInfo)
-      return { styleStatus: "bg-red-200", formattedType: "Unknown" };
+  const formatTransactionInfo = (delivery: DeliveryType) => {
+    const paymentStatus =
+      delivery.status?.transactioninfo?.status?.toLowerCase() || "pending";
+    const paymentMethod = delivery.transactiontype;
 
     const statusStyles: Record<string, string> = {
       paid: "bg-color2/50",
       pending: "bg-color2/40",
+      failed: "bg-red-200",
     };
 
     const typeLabels: Record<string, string> = {
@@ -165,15 +124,12 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
     };
 
     return {
-      statusStyles:
-        statusStyles[transactionInfo.payment_status] || "bg-red-200",
-      formattedType: typeLabels[delivery.transactiontype.toLowerCase()],
+      statusStyles: statusStyles[paymentStatus] || "bg-gray-200",
+      formattedType: typeLabels[paymentMethod] || "Unknown",
     };
   };
 
-  const { statusStyles, formattedType } = formatTransactionInfo(
-    delivery.transaction_info
-  );
+  const { statusStyles, formattedType } = formatTransactionInfo(delivery);
 
   return (
     <motion.div
@@ -203,22 +159,25 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
             <p className="text-gray-700 font-medium">Status:</p>
             <span
               className={`px-4 py-1.5 rounded-lg text-white text-sm ${
-                delivery.status.current === "in transit"
+                delivery.status.deliverystatus === "in transit"
                   ? "bg-color2/20"
-                  : delivery.status.current === "completed"
+                  : delivery.status.deliverystatus === "completed"
                   ? "bg-color2/80"
                   : "bg-color1/50"
               }`}
             >
-              {delivery.status.current}
+              {delivery.status.deliverystatus}
             </span>
           </div>
           <div className="mt-2 text-gray-500 space-y-1">
             <p className="text-sm">
-              Last Updated: {formatDateJoined(delivery.last_updated)}
+              Last Updated: {formatDateJoined(delivery?.last_updated ?? null)}
             </p>
             <p className="text-sm opacity-35">
-              Status Timestamp: {formatDateJoined(delivery.status.timestamp)}
+              Payment Date:{" "}
+              {formatDateJoined(
+                delivery.transaction_info?.payment_date ?? null
+              )}
             </p>
           </div>
         </div>
@@ -261,7 +220,8 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
 
         {/* User ID badge */}
         <div className="bg-color1/10 px-4 py-3 rounded-lg text-center mb-8">
-          <span className="font-medium">Belonging to:</span> {delivery.user_id}
+          <span className="font-medium">Belonging to:</span>{" "}
+          {delivery.user?.firstname} {delivery.user?.lastname}
         </div>
 
         {/* Transaction details */}
@@ -269,7 +229,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
           <div className="flex justify-between items-center mb-4">
             <strong className="text-gray-700">Transaction Info</strong>
             <span className="text-sm text-gray-500">
-              {formatDateJoined(delivery.transaction_info.payment_date)}
+              {formatDateJoined(delivery.transaction_info?.payment_date)}
             </span>
           </div>
 
@@ -287,42 +247,10 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
               <div className="flex items-center gap-2">
                 <span className={`w-3 h-3 rounded-full ${statusStyles}`} />
                 <span className="text-sm capitalize">
-                  {delivery.transaction_info.payment_status}
+                  {delivery.transaction_info?.payment_status}
                 </span>
               </div>
             </p>
-          </div>
-        </div>
-
-        {/* Rider info */}
-        <div className="flex items-center gap-4 mb-8 bg-color1/5 p-4 rounded-lg">
-          <div>
-            {delivery.vehicletype === "bike" ? (
-              <FaMotorcycle className="w-8 h-8 text-color2" />
-            ) : (
-              <FaCar className="w-8 h-8 text-color2" />
-            )}
-          </div>
-          <div>
-            <p className="font-semibold text-lg text-color1">
-              {associatedRider.firstname} {associatedRider.lastname}
-            </p>
-            <div className="flex items-center space-x-1">
-              {Array(5)
-                .fill(0)
-                .map((_, i) => (
-                  <span
-                    key={i}
-                    className={`text-color1/40 ${
-                      i < (associatedRider.ratings ?? 0)
-                        ? "opacity-100"
-                        : "opacity-20"
-                    }`}
-                  >
-                    ★
-                  </span>
-                ))}
-            </div>
           </div>
         </div>
 

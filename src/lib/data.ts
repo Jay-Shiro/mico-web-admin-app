@@ -1,21 +1,8 @@
+import { DeliveryType } from "@/app/(dashboard)/list/tracking/deliveryType";
+
 // TEMPORARY DATA
 
 export let role = "admin";
-
-export const adminData = [
-  {
-    id: 1,
-    teacherId: "1234567890",
-    name: "John Doe",
-    email: "john@doe.com",
-    photo:
-      "https://images.pexels.com/photos/2888150/pexels-photo-2888150.jpeg?auto=compress&cs=tinysrgb&w=1200",
-    phone: "1234567890",
-    subjects: ["Math", "Geometry"],
-    classes: ["1B", "2A", "3C"],
-    address: "123 Main St, Anytown, USA",
-  },
-];
 
 export const accountData = [
   {
@@ -546,22 +533,30 @@ export const subjectsData = [
   },
 ];
 
-export const deliveriesData = [
+export const deliveriesData: DeliveryType[] = [
   {
-    id: "23523432343",
+    _id: "23523432343",
     user_id: "1234567890",
     price: 0,
     distance: "5 km",
     startpoint:
       "DRAGON WOK EXPRESS, Adetokunbo Ademola Crescent, Abuja, Nigeria",
     endpoint: "Results Fitness, Richmond Highway, Alexandria, VA, USA",
+    stops: [],
     vehicletype: "bike",
     transactiontype: "cash",
     packagesize: "Quarter and below",
     deliveryspeed: "standard",
     status: {
-      current: "completed",
-      timestamp: "2025-03-21T11:56:30.096000",
+      deliverystatus: "completed",
+      orderstatus: "completed",
+      riderid: "1",
+      transactioninfo: {
+        status: "pending",
+        payment_method: "cash",
+        payment_id: null,
+        payment_date: "2025-03-20T08:53:40.804000",
+      },
     },
     transaction_info: {
       payment_status: "pending",
@@ -569,22 +564,29 @@ export const deliveriesData = [
       last_updated: "2025-03-20T07:53:42.642000",
     },
     last_updated: "2025-03-21T11:56:30.096000",
-    rider_id: "1",
   },
   {
-    id: "8765432109",
+    _id: "8765432109",
     user_id: "9876543210",
     price: 5,
     distance: "10 km",
     startpoint: "Lekki Mall, Admiralty Way, Lagos, Nigeria",
     endpoint: "Eko Hotel & Suites, Adetokunbo Ademola Street, Lagos, Nigeria",
+    stops: [],
     vehicletype: "bike",
     transactiontype: "cash",
     packagesize: "Medium",
     deliveryspeed: "express",
     status: {
-      current: "pending",
-      timestamp: "2025-03-22T09:30:15.120000",
+      deliverystatus: "pending",
+      orderstatus: "pending",
+      riderid: "2",
+      transactioninfo: {
+        status: "paid",
+        payment_method: "cash",
+        payment_id: null,
+        payment_date: "2025-03-22T08:20:10.654000",
+      },
     },
     transaction_info: {
       payment_status: "paid",
@@ -592,145 +594,6 @@ export const deliveriesData = [
       last_updated: "2025-03-22T08:21:42.612000",
     },
     last_updated: "2025-03-22T09:30:15.120000",
-    rider_id: "2",
-  },
-  {
-    id: "5432109876",
-    user_id: "1122334455",
-    price: 7,
-    distance: "12 km",
-    startpoint: "Silverbird Galleria, Victoria Island, Lagos, Nigeria",
-    endpoint: "Mega Plaza, Idowu Martins Street, Lagos, Nigeria",
-    vehicletype: "car",
-    transactiontype: "card",
-    packagesize: "Large",
-    deliveryspeed: "standard",
-    status: {
-      current: "in transit",
-      timestamp: "2025-03-22T10:15:20.230000",
-    },
-    transaction_info: {
-      payment_status: "pending",
-      payment_date: "2025-03-22T09:40:50.560000",
-      last_updated: "2025-03-22T09:50:00.780000",
-    },
-    last_updated: "2025-03-22T10:15:20.230000",
-    rider_id: "4",
-  },
-  {
-    id: "1928374650",
-    user_id: "5566778899",
-    price: 3,
-    distance: "4 km",
-    startpoint: "Wuse Market, Wuse Zone 5, Abuja, Nigeria",
-    endpoint: "Maitama Amusement Park, Maitama, Abuja, Nigeria",
-    vehicletype: "bike",
-    transactiontype: "cash",
-    packagesize: "Small",
-    deliveryspeed: "standard",
-    status: {
-      current: "completed",
-      timestamp: "2025-03-21T14:00:00.096000",
-    },
-    transaction_info: {
-      payment_status: "paid",
-      payment_date: "2025-03-21T12:50:30.654000",
-      last_updated: "2025-03-21T13:30:20.789000",
-    },
-    last_updated: "2025-03-21T14:00:00.096000",
-    rider_id: "3",
-  },
-  {
-    id: "1234567891",
-    user_id: "6677889900",
-    price: 4,
-    distance: "6 km",
-    startpoint: "Jabi Lake Mall, Bala Sokoto Way, Abuja, Nigeria",
-    endpoint: "Transcorp Hilton, Maitama, Abuja, Nigeria",
-    vehicletype: "bike",
-    transactiontype: "cash",
-    packagesize: "Quarter and below",
-    deliveryspeed: "standard",
-    status: {
-      current: "pending",
-      timestamp: "2025-03-22T12:00:30.096000",
-    },
-    transaction_info: {
-      payment_status: "pending",
-      payment_date: "2025-03-22T11:10:20.654000",
-      last_updated: "2025-03-22T11:50:45.642000",
-    },
-    last_updated: "2025-03-22T12:00:30.096000",
-    rider_id: "5",
-  },
-  {
-    id: "9876543212",
-    user_id: "1234432112",
-    price: 8,
-    distance: "15 km",
-    startpoint: "Novare Mall, Lekki-Epe Expressway, Lagos, Nigeria",
-    endpoint: "Circle Mall, Jakande, Lagos, Nigeria",
-    vehicletype: "car",
-    transactiontype: "card",
-    packagesize: "Large",
-    deliveryspeed: "express",
-    status: {
-      current: "in transit",
-      timestamp: "2025-03-22T14:30:15.120000",
-    },
-    transaction_info: {
-      payment_status: "paid",
-      payment_date: "2025-03-22T13:40:10.654000",
-      last_updated: "2025-03-22T14:10:42.612000",
-    },
-    last_updated: "2025-03-22T14:30:15.120000",
-    rider_id: "7",
-  },
-  {
-    id: "1112223334",
-    user_id: "9988776655",
-    price: 2,
-    distance: "3 km",
-    startpoint: "Shoprite, Ikeja City Mall, Lagos, Nigeria",
-    endpoint: "Maryland Mall, Ikorodu Road, Lagos, Nigeria",
-    vehicletype: "bike",
-    transactiontype: "cash",
-    packagesize: "Small",
-    deliveryspeed: "standard",
-    status: {
-      current: "completed",
-      timestamp: "2025-03-21T16:00:30.096000",
-    },
-    transaction_info: {
-      payment_status: "paid",
-      payment_date: "2025-03-21T15:10:20.804000",
-      last_updated: "2025-03-21T15:50:42.642000",
-    },
-    last_updated: "2025-03-21T16:00:30.096000",
-    rider_id: "4",
-  },
-  {
-    id: "9988776655",
-    user_id: "5544332211",
-    price: 6,
-    distance: "8 km",
-    startpoint: "Aminu Kano Crescent, Wuse 2, Abuja, Nigeria",
-    endpoint: "Ceddi Plaza, Central Business District, Abuja, Nigeria",
-    vehicletype: "bike",
-    transactiontype: "cash",
-    packagesize: "Medium",
-    deliveryspeed: "express",
-    status: {
-      current: "pending",
-      timestamp: "2025-03-22T17:45:30.096000",
-    },
-    transaction_info: {
-      payment_status: "pending",
-      payment_date: "2025-03-22T16:30:40.804000",
-      last_updated: "2025-03-22T17:10:42.642000",
-    },
-    last_updated: "2025-03-22T17:45:30.096000",
-    rider_id: "10",
   },
 ];
 

@@ -42,8 +42,6 @@ const RidersListPage = () => {
         setRidersData(data.riders);
         setFilteredRiders(data.riders);
       }
-
-      console.log(data.riders[0].facial_photo_url);
     } catch (error) {
       console.error("Error fetching riders:", error);
     } finally {
@@ -76,8 +74,6 @@ const RidersListPage = () => {
 
   // rider's status
   const handleStatusToggle = async (riderId: string, updatedStatus: string) => {
-    console.log("Updating status:", riderId, updatedStatus);
-
     setRidersData((prev) =>
       prev.map((rider) =>
         rider._id === riderId
@@ -166,7 +162,6 @@ const RidersListPage = () => {
     try {
       setUpdating(true);
       setUpdatingMessage("Updating, Please wait....");
-      console.log("Starting activation/deactivation for riders:", riderIds);
 
       // Loop through each selected rider
       for (const riderId of riderIds) {
@@ -180,12 +175,6 @@ const RidersListPage = () => {
         // Determine action based on current status
         const isActive = rider.status?.toLowerCase() === "active";
         const action = isActive ? "deactivate" : "activate";
-
-        console.log(
-          `${
-            action.charAt(0).toUpperCase() + action.slice(1)
-          } rider: ${riderId}`
-        );
 
         // Update UI state optimistically
         await handleStatusToggle(
@@ -207,7 +196,6 @@ const RidersListPage = () => {
 
         setUpdatingMessage("All done...");
       }
-      console.log("Activation process completed.");
     } catch (error) {
       console.error("Error updating rider status:", error);
       setUpdatingMessage("Error updating riders...");
@@ -231,11 +219,9 @@ const RidersListPage = () => {
       setCurrentAction(null);
     } else if (kind === "execute") {
       if (riderIds.length === 0) {
-        console.log("No riders selected");
+        ("No riders selected");
         return;
       }
-
-      console.log("Selected Rider IDs", riderIds);
 
       switch (currentAction) {
         case "delete":
