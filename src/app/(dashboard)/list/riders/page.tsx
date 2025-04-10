@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CiExport } from "react-icons/ci";
 import { IoMdDoneAll } from "react-icons/io";
 import { MdDeleteForever, MdOutlineSelectAll } from "react-icons/md";
-import { Eye } from "lucide-react";
+import { Eye, AlertCircle } from "lucide-react";
 import { ProfileModal } from "./ProfileModal";
 import { Rider } from "./riderType";
 import { exportAllRidersToCSV } from "@/lib/exportCSV";
@@ -27,12 +27,15 @@ const RidersListPage = () => {
   const [currentAction, setCurrentAction] = useState<
     "delete" | "activate" | null
   >(null);
+  const [error, setError] = useState<string | null>(null);
 
   let text;
 
   // fetch riders data from API
 
   const fetchRiders = async () => {
+    setError(null); // Reset error state
+    setLoading(true);
     try {
       const response = await fetch("/api/riders", { cache: "no-store" });
       if (!response.ok) throw new Error("Failed to fetch riders data");
@@ -44,6 +47,7 @@ const RidersListPage = () => {
       }
     } catch (error) {
       console.error("Error fetching riders:", error);
+      setError("Failed to load riders. Please check your network connection.");
     } finally {
       setLoading(false);
     }
@@ -301,56 +305,70 @@ const RidersListPage = () => {
           >
             <span>{updatingMessage}</span>
           </motion.div>
-        ) : null}
-        <div className="flex items-center justify-between flex-wrap">
-          {/* Heading stays at the start */}
-          <h1 className="md:block text-lg text-color1 font-semibold p-2">
-            All Riders
-          </h1>
-
-          {/* Action Icons */}
-          <div className="flex gap-x-4">
-            {selection ? (
-              <>
-                {" "}
-                <GiCancel
-                  className="text-red bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-red/20"
-                  onClick={() => handleActions("off")}
-                />
-                <MdOutlineSelectAll
-                  className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
-                  onClick={() => handleSelectAll()}
-                />
-                <IoCheckmarkDoneCircleOutline
-                  className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
-                  onClick={() => handleActions("execute")}
-                />
-              </>
-            ) : (
-              <>
-                <CiExport
-                  className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
-                  onClick={() => exportAllRidersToCSV(ridersData)}
-                />
-                <IoMdDoneAll
-                  className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
-                  onClick={() => {
-                    setCurrentAction("activate");
-                    setSelection(true);
-                  }}
-                />
-                <MdDeleteForever
-                  className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
-                  onClick={() => {
-                    setCurrentAction("delete");
-                    setSelection(true);
-                  }}
-                />
-              </>
-            )}
-            <span className="text-color1/50">Total: {ridersData.length}</span>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mb-2" />
+            <p className="text-red-500 mb-4">{error}</p>
+            <button
+              onClick={() => fetchRiders()}
+              className="px-4 py-2 bg-color1 text-white rounded-md hover:bg-color1/80 transition-colors"
+            >
+              Retry
+            </button>
           </div>
-        </div>
+        ) : loading ? (
+          <div className="text-center text-color1 p-4">Loading riders...</div>
+        ) : (
+          <div className="flex items-center justify-between flex-wrap">
+            {/* Heading stays at the start */}
+            <h1 className="md:block text-lg text-color1 font-semibold p-2">
+              All Riders
+            </h1>
+
+            {/* Action Icons */}
+            <div className="flex gap-x-4">
+              {selection ? (
+                <>
+                  {" "}
+                  <GiCancel
+                    className="text-red bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-red/20"
+                    onClick={() => handleActions("off")}
+                  />
+                  <MdOutlineSelectAll
+                    className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
+                    onClick={() => handleSelectAll()}
+                  />
+                  <IoCheckmarkDoneCircleOutline
+                    className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
+                    onClick={() => handleActions("execute")}
+                  />
+                </>
+              ) : (
+                <>
+                  <CiExport
+                    className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
+                    onClick={() => exportAllRidersToCSV(ridersData)}
+                  />
+                  <IoMdDoneAll
+                    className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
+                    onClick={() => {
+                      setCurrentAction("activate");
+                      setSelection(true);
+                    }}
+                  />
+                  <MdDeleteForever
+                    className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
+                    onClick={() => {
+                      setCurrentAction("delete");
+                      setSelection(true);
+                    }}
+                  />
+                </>
+              )}
+              <span className="text-color1/50">Total: {ridersData.length}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* PAGINATION */}

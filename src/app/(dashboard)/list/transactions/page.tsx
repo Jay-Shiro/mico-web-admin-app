@@ -307,7 +307,12 @@ export default function TransactionsPage() {
         />
 
         <motion.select
-          className="p-2 border rounded focus:ring-2 focus:ring-color1"
+          className="p-2 text-sm bg-white border border-color1/20 
+                        rounded-lg shadow-sm outline-none hover:border-color1 
+                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
+                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
+                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
+                        pr-8 transition-all"
           value={selectedRider}
           onChange={(e) => {
             setSelectedRider(e.target.value);
@@ -331,7 +336,7 @@ export default function TransactionsPage() {
                         focus:border-color1 focus:ring-1 focus:ring-color1/50 
                         cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
                         bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
-                        pr-8 transition-all "
+                        pr-8 transition-all"
           value={selectedType}
           onChange={(e) => {
             setSelectedType(e.target.value as "" | "completed" | "pending");

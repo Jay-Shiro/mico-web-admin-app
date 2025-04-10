@@ -7,14 +7,42 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    console.log("Deleting admin:", params.id);
+
     const response = await fetch(`${BASE_URL}/admins/${params.id}/delete`, {
-      method: "DELETE",
+      method: "DELETE", // The API expects DELETE
+      headers: {
+        Accept: "application/json",
+      },
     });
 
-    if (!response.ok) throw new Error(response.statusText);
-    const data = await response.json();
-    return NextResponse.json(data);
-  } catch (error) {
+    const responseText = await response.text();
+    console.log("Delete response:", responseText);
+
+    let data;
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      console.error("Failed to parse delete response:", responseText);
+      return NextResponse.json(
+        { error: responseText || "Server error" },
+        { status: response.status }
+      );
+    }
+
+    if (!response.ok) {
+      return NextResponse.json(
+        { error: data.detail || "Failed to delete admin" },
+        { status: response.status }
+      );
+    }
+
+    return NextResponse.json({
+      status: "success",
+      message: "Admin deleted successfully",
+    });
+  } catch (error: any) {
+    console.error("Delete error:", error);
     return NextResponse.json(
       { error: "Failed to delete admin" },
       { status: 500 }
