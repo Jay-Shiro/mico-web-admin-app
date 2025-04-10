@@ -187,8 +187,8 @@ const NotificationsCenter = () => {
                 No notifications found
               </h3>
               <p className="mt-2 text-gray-500 text-center max-w-md">
-                We couldn't find any notifications matching your criteria. Try
-                adjusting your filters.
+                We couldn&apos;t find any notifications matching your criteria.
+                Try adjusting your filters.
               </p>
             </div>
           ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 // import { deliveriesData } from "@/lib/data";
 import {
   Eye,
@@ -126,11 +126,7 @@ const DeliveriesListPage = () => {
     return { total, completed, inProgress, pending, bikes, cars };
   }, [filteredDeliveries]);
 
-  useEffect(() => {
-    applyFilters();
-  }, [searchInput, statusFilter, vehicleFilter, selectedDate]);
-
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...deliveriesData];
 
     // Search filter
@@ -158,11 +154,12 @@ const DeliveriesListPage = () => {
       );
     }
 
-    // Date filter could be implemented if the data included delivery dates
-    // For now, we're just keeping the date selector for UI demonstration
-
     setFilteredDeliveries(filtered);
-  };
+  }, [deliveriesData, searchInput, statusFilter, vehicleFilter]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [searchInput, statusFilter, vehicleFilter, selectedDate, applyFilters]);
 
   // fetch riders data from API
   const fetchRiders = async () => {

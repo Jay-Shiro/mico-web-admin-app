@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Notification,
   NotificationType,
@@ -110,54 +110,53 @@ export const useNotifications = (userRole: UserRole) => {
     return isDuplicate;
   };
 
-  const addNotification = (
-    notification: Omit<Notification, "id" | "timestamp" | "read">
-  ) => {
-    if (!ROLE_NOTIFICATIONS[userRole].includes(notification.type)) {
-      return;
-    }
+  const addNotification = useCallback(
+    (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
+      if (!ROLE_NOTIFICATIONS[userRole].includes(notification.type)) {
+        return;
+      }
 
-    // Check notification history first
-    if (
-      checkNotificationHistory(
-        notification.type,
-        notification.metadata?.entityId
-      )
-    ) {
-      return;
-    }
+      // Check notification history first
+      if (
+        checkNotificationHistory(
+          notification.type,
+          notification.metadata?.entityId
+        )
+      ) {
+        return;
+      }
 
-    const stored = localStorage.getItem(STORAGE_KEY);
-    const existingNotifications = stored ? JSON.parse(stored) : [];
+      const stored = localStorage.getItem(STORAGE_KEY);
+      const existingNotifications = stored ? JSON.parse(stored) : [];
 
-    // Check for duplicates based on type and metadata
-    const isDuplicate = existingNotifications.some((n: Notification) => {
-      if (n.type !== notification.type) return false;
-      if (n.metadata?.entityId !== notification.metadata?.entityId)
-        return false;
-      // Consider notifications within 5 minutes as duplicates
-      const timeDiff = Date.now() - new Date(n.timestamp).getTime();
-      return timeDiff < 300000; // 5 minutes in milliseconds
-    });
+      // Check for duplicates based on type and metadata
+      const isDuplicate = existingNotifications.some((n: Notification) => {
+        if (n.type !== notification.type) return false;
+        if (n.metadata?.entityId !== notification.metadata?.entityId)
+          return false;
+        const timeDiff = Date.now() - new Date(n.timestamp).getTime();
+        return timeDiff < 300000;
+      });
 
-    if (isDuplicate) return;
+      if (isDuplicate) return;
 
-    const newNotification: Notification = {
-      ...notification,
-      id: `not-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date().toISOString(),
-      read: false,
-    };
+      const newNotification: Notification = {
+        ...notification,
+        id: `not-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: new Date().toISOString(),
+        read: false,
+      };
 
-    const updated = [newNotification, ...existingNotifications].slice(0, 100);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      const updated = [newNotification, ...existingNotifications].slice(0, 100);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
 
-    setNotifications((prev) => [newNotification, ...prev]);
-    setUnreadCount((prev) => prev + 1);
+      setNotifications((prev) => [newNotification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
 
-    // Dispatch update event
-    window.dispatchEvent(new Event("notificationUpdate"));
-  };
+      window.dispatchEvent(new Event("notificationUpdate"));
+    },
+    [userRole]
+  );
 
   const deleteNotification = (id: string) => {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -313,7 +312,14 @@ export const useNotifications = (userRole: UserRole) => {
     checkForChanges();
     const intervalId = setInterval(checkForChanges, MONITORING_INTERVAL);
     return () => clearInterval(intervalId);
-  }, [userRole]);
+  }, [
+    userRole,
+    addNotification,
+    prevStats.ridersCount,
+    prevStats.deliveryStatuses,
+    prevStats.paymentStatuses,
+    prevStats.riderStatuses,
+  ]);
 
   const markAsRead = (id: string) => {
     const stored = localStorage.getItem(STORAGE_KEY);
