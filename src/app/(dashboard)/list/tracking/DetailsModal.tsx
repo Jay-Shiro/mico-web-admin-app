@@ -218,10 +218,14 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
           </div>
         </div>
 
-        {/* User ID badge */}
+        {/* User & Rider badge */}
         <div className="bg-color1/10 px-4 py-3 rounded-lg text-center mb-8">
-          <span className="font-medium">Belonging to:</span>{" "}
-          {delivery.user?.firstname} {delivery.user?.lastname}
+          <p className="font-medium">
+            Belonging to: {delivery.user?.firstname} {delivery.user?.lastname}
+          </p>
+          <p className="font-medium opacity-60 mt-2">
+            Delivered by: {delivery.rider?.firstname} {delivery.rider?.lastname}
+          </p>
         </div>
 
         {/* Transaction details */}
