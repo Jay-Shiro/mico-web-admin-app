@@ -9,6 +9,12 @@ export default function ProfilePage() {
   const { data: session } = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
   const [formData, setFormData] = useState({
     username: session?.user?.username || "",
     email: session?.user?.email || "",
@@ -24,18 +30,55 @@ export default function ProfilePage() {
       return;
     }
 
+    setIsLoading(true);
     try {
-      const res = await fetch(`/api/admins/${session?.user?.id}/update`, {
+      // Create form data with only modified fields
+      const updates = new URLSearchParams();
+
+      if (formData.username.trim() !== session?.user?.username) {
+        updates.append("username", formData.username.trim());
+      }
+      if (formData.email.trim() !== session?.user?.email) {
+        updates.append("email", formData.email.trim());
+      }
+      if (formData.currentPassword && formData.newPassword) {
+        updates.append("current_password", formData.currentPassword);
+        updates.append("new_password", formData.newPassword);
+      }
+
+      // Only proceed if there are actual changes
+      if (Array.from(updates.entries()).length === 0) {
+        toast.error("No changes to update");
+        return;
+      }
+
+      const res = await fetch(`/api/admins/${session?.user?.id}/delete`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: updates.toString(),
       });
 
-      if (!res.ok) throw new Error();
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update profile");
+      }
+
       toast.success("Profile updated successfully");
       setIsEditing(false);
-    } catch {
-      toast.error("Failed to update profile");
+      // Reset password fields
+      setFormData((prev) => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -171,49 +214,94 @@ export default function ProfilePage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Current Password
                       </label>
-                      <input
-                        type="password"
-                        value={formData.currentPassword}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            currentPassword: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-color1 focus:outline-none"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.current ? "text" : "password"}
+                          value={formData.currentPassword}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              currentPassword: e.target.value,
+                            })
+                          }
+                          disabled={isLoading}
+                          className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-color1 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPasswords((prev) => ({
+                              ...prev,
+                              current: !prev.current,
+                            }))
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                        >
+                          {showPasswords.current ? "Hide" : "Show"}
+                        </button>
+                      </div>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         New Password
                       </label>
-                      <input
-                        type="password"
-                        value={formData.newPassword}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            newPassword: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-color1 focus:outline-none"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.new ? "text" : "password"}
+                          value={formData.newPassword}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              newPassword: e.target.value,
+                            })
+                          }
+                          disabled={isLoading}
+                          className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-color1 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPasswords((prev) => ({
+                              ...prev,
+                              new: !prev.new,
+                            }))
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                        >
+                          {showPasswords.new ? "Hide" : "Show"}
+                        </button>
+                      </div>
                     </div>
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Confirm New Password
                       </label>
-                      <input
-                        type="password"
-                        value={formData.confirmPassword}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            confirmPassword: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-color1 focus:outline-none"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPasswords.confirm ? "text" : "password"}
+                          value={formData.confirmPassword}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              confirmPassword: e.target.value,
+                            })
+                          }
+                          disabled={isLoading}
+                          className="w-full px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-color1 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPasswords((prev) => ({
+                              ...prev,
+                              confirm: !prev.confirm,
+                            }))
+                          }
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                        >
+                          {showPasswords.confirm ? "Hide" : "Show"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -221,9 +309,35 @@ export default function ProfilePage() {
                 <div className="flex justify-end pt-4">
                   <button
                     type="submit"
-                    className="px-6 py-2 bg-color1 text-white rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all"
+                    disabled={isLoading}
+                    className="px-6 py-2 bg-color1 text-white rounded-xl shadow-md hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
                   >
-                    Save Changes
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="animate-spin h-5 w-5"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Saving...
+                      </span>
+                    ) : (
+                      "Save Changes"
+                    )}
                   </button>
                 </div>
               </>

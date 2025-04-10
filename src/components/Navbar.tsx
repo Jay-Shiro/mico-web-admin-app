@@ -3,9 +3,14 @@
 import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Navbar = () => {
   const { data: session } = useSession();
+  const userRole =
+    (session?.user?.role as "admin" | "manager" | "support") || "support";
+  const { unreadCount } = useNotifications(userRole);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -22,6 +27,12 @@ const Navbar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    // Update document title when unread count changes
+    document.title =
+      unreadCount > 0 ? `(${unreadCount}) Mico Admin` : "Mico Admin";
+  }, [unreadCount]);
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
@@ -40,14 +51,25 @@ const Navbar = () => {
       </div>
       {/*ICONS AND USER*/}
       <div className="flex items-center gap-6 w-full justify-end">
-        <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
+        {/* <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer">
           <Image src="/message.png" alt="" width={20} height={20} />
-        </div>
+        </div> */}
         <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative">
-          <Image src="/announcement.png" alt="" width={20} height={20} />
-          <div className="absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-[#001f3e] text-white rounded-full text-xs">
-            1
-          </div>
+          <Link href="/notifications">
+            {" "}
+            <Image
+              src="/announcement.png"
+              alt=""
+              width={20}
+              height={20}
+              className={unreadCount > 0 ? "animate-pulse" : ""}
+            />
+            {unreadCount > 0 && (
+              <div className="absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-[#001f3e] text-white rounded-full text-xs transition-all duration-300 ease-in-out animate-bounce">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </div>
+            )}
+          </Link>
         </div>
         {session?.user && (
           <>

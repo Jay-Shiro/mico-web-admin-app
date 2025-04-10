@@ -31,6 +31,17 @@ import {
   FaExclamationTriangle,
 } from "react-icons/fa";
 import dynamic from "next/dynamic";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
 
 // Dynamic import for the map component to prevent SSR issues
 const DeliveryMap = dynamic(() => import("./DeliveryMap"), {
@@ -63,6 +74,12 @@ const DeliveriesListPage = () => {
     new Date().toISOString().split("T")[0]
   );
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+  const [trackingDeliveryId, setTrackingDeliveryId] = useState<string | null>(
+    null
+  );
+  const [trackableDeliveries, setTrackableDeliveries] = useState<Set<string>>(
+    new Set()
+  );
 
   // Fetch deliveries data from API
   const fetchDeliveries = async () => {
@@ -94,7 +111,7 @@ const DeliveriesListPage = () => {
       (d) => d.status.current.toLowerCase() === "completed"
     ).length;
     const inProgress = filteredDeliveries.filter(
-      (d) => d.status.current.toLowerCase() === "in progress"
+      (d) => d.status.current.toLowerCase() === "inprogress"
     ).length;
     const pending = filteredDeliveries.filter(
       (d) => d.status.current.toLowerCase() === "pending"
@@ -167,13 +184,158 @@ const DeliveriesListPage = () => {
     fetchRiders();
   }, []);
 
+  const handleDeliveryClick = (delivery: DeliveryType) => {
+    setSelectedDelivery(delivery);
+  };
+
+  // Add function to check if delivery is trackable
+  const checkTrackableDelivery = async (deliveryId: string) => {
+    try {
+      const response = await fetch(
+        `/api/deliveries/${deliveryId}/rider-location`
+      );
+      // Only returns true if we can successfully get location data
+      return response.ok && (await response.json()).location_data;
+    } catch {
+      return false;
+    }
+  };
+
+  // Add this useEffect to automatically check which deliveries are trackable
+  useEffect(() => {
+    const checkTrackableDeliveries = async () => {
+      const trackable = new Set<string>();
+
+      // Only check deliveries that are "inprogress"
+      const inProgressDeliveries = filteredDeliveries.filter(
+        (delivery) => delivery.status.current.toLowerCase() === "inprogress"
+      );
+
+      // Check each in-progress delivery in parallel
+      const checks = await Promise.all(
+        inProgressDeliveries.map(async (delivery) => {
+          const isTrackable = await checkTrackableDelivery(delivery._id);
+          if (isTrackable) {
+            trackable.add(delivery._id);
+          }
+          return { id: delivery._id, trackable: isTrackable };
+        })
+      );
+
+      setTrackableDeliveries(trackable);
+    };
+
+    checkTrackableDeliveries();
+  }, [filteredDeliveries]); // Re-run when deliveries list changes
+
+  // Function to handle track button click
+  const handleTrackDelivery = async (delivery: DeliveryType) => {
+    // If already tracking this delivery, stop tracking
+    if (trackingDeliveryId === delivery._id) {
+      setTrackingDeliveryId(null);
+      setActiveView("list");
+      return;
+    }
+
+    // Check if delivery is trackable
+    const isTrackable = await checkTrackableDelivery(delivery._id);
+    if (isTrackable) {
+      setTrackingDeliveryId(delivery._id);
+      setActiveView("map");
+    }
+  };
+
+  // Reusable track button component that handles the disabled state
+  const TrackButton = ({ delivery }: { delivery: DeliveryType }) => {
+    const isTrackable = trackableDeliveries.has(delivery._id);
+    const isTracking = trackingDeliveryId === delivery._id;
+
+    return (
+      <button
+        className={`p-2 rounded-full transition ${
+          isTrackable
+            ? isTracking
+              ? "bg-color1lite text-color1" // Currently tracking
+              : "text-gray-500 hover:bg-gray-100" // Trackable but not tracking
+            : "text-gray-300 cursor-not-allowed" // Not trackable
+        }`}
+        onClick={() => isTrackable && handleTrackDelivery(delivery)}
+        disabled={!isTrackable}
+        title={
+          isTrackable
+            ? isTracking
+              ? "Stop Tracking"
+              : "Track Delivery"
+            : "Delivery not trackable"
+        }
+      >
+        <FaRoute className="w-5 h-5" />
+      </button>
+    );
+  };
+
+  // Add new analytics calculations
+  const analyticsData = useMemo(() => {
+    const totalDeliveries = deliveriesData.length;
+    if (totalDeliveries === 0) return null;
+
+    // Calculate average delivery time (assuming we have timestamps)
+    const completedDeliveries = deliveriesData.filter(
+      (d) => d.status.current.toLowerCase() === "completed"
+    );
+
+    // Calculate delivery counts by status
+    const statusCounts = deliveriesData.reduce((acc, delivery) => {
+      const status = delivery.status.current.toLowerCase();
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Calculate vehicle type distribution
+    const vehicleCounts = deliveriesData.reduce((acc, delivery) => {
+      const type = delivery.vehicletype.toLowerCase();
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Calculate average distance
+    const totalDistance = deliveriesData.reduce((sum, delivery) => {
+      const distance = parseFloat(delivery.distance) || 0;
+      return sum + distance;
+    }, 0);
+    const avgDistance = totalDistance / totalDeliveries;
+
+    // Create data for status trend chart
+    const statusData = [
+      { name: "Completed", value: statusCounts.completed || 0 },
+      { name: "In Progress", value: statusCounts.inprogress || 0 },
+      { name: "Pending", value: statusCounts.pending || 0 },
+    ];
+
+    // Create data for vehicle distribution chart
+    const vehicleData = [
+      { name: "Bikes", value: vehicleCounts.bike || 0 },
+      { name: "Cars", value: vehicleCounts.car || 0 },
+    ];
+
+    return {
+      averageDistance: avgDistance.toFixed(1),
+      completionRate: (
+        ((statusCounts.completed || 0) / totalDeliveries) *
+        100
+      ).toFixed(1),
+      statusData,
+      vehicleData,
+    };
+  }, [deliveriesData]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* HEADER WITH REALTIME DATE */}
-      <header className="bg-gradient-to-r from-color1 to-color2 text-white py-5 px-6 shadow-lg">
-        <div className="container mx-auto flex justify-between items-center">
+      <header className="bg-gradient-to-r from-color1 to-color2 text-white py-3 sm:py-5 px-4 sm:px-6 shadow-lg">
+        <div className="container mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
           <div>
-            <p className="text-blue-100 mt-1">
+            <p className="text-color1 text-sm sm:text-base">
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
@@ -181,12 +343,14 @@ const DeliveriesListPage = () => {
                 day: "numeric",
               })}
               {" • "}
-              {new Date().toLocaleTimeString("en-US")}
+              <span className="hidden sm:inline">
+                {new Date().toLocaleTimeString("en-US")}
+              </span>
             </p>
           </div>
           <div className="flex items-center space-x-3">
-            <span className="bg-green-500 px-3 py-1 rounded-full text-sm font-medium flex items-center">
-              <span className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></span>
+            <span className="bg-green-500 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full mr-1.5 sm:mr-2 animate-pulse"></span>
               Live Tracking
             </span>
           </div>
@@ -194,8 +358,8 @@ const DeliveriesListPage = () => {
       </header>
 
       {/* DASHBOARD METRICS */}
-      <section className="container mx-auto mt-6 px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="container mx-auto mt-4 sm:mt-6 px-3 sm:px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Total Deliveries */}
           <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-600 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
@@ -297,182 +461,184 @@ const DeliveriesListPage = () => {
       </section>
 
       {/* FILTERS AND CONTROLS */}
-      <section className="container mx-auto mt-6 px-4">
-        <div className="bg-white p-4 rounded-xl shadow-md">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-            {/* Left side controls */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-              <div className="relative flex items-center w-full sm:w-auto">
-                <Search className="absolute left-3 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Search by ID, vehicle type, location..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
+      <section className="container mx-auto mt-4 sm:mt-6 px-3 sm:px-4">
+        <div className="bg-white p-3 sm:p-4 rounded-xl shadow-md">
+          <div className="flex flex-col space-y-3 sm:space-y-4">
+            {/* Top controls */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+              {/* Search and primary filters */}
+              <div className="w-full sm:w-auto flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                <div className="relative flex-grow sm:max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+                  <input
+                    type="text"
+                    className="w-full pl-9 sm:pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color1"
+                    placeholder="Search deliveries..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className={`flex items-center px-3 py-2 rounded-lg border text-sm ${
+                      isFilterOpen
+                        ? "bg-color1lite text-color1 border-color1"
+                        : "border-gray-300 text-gray-600"
+                    }`}
+                  >
+                    <Filter className="h-4 w-4 mr-1.5" />
+                    Filters
+                  </button>
+
+                  {/* View toggles */}
+                  <div className="flex items-center border-l border-gray-300 pl-2 sm:pl-3">
+                    <button
+                      onClick={() => setActiveView("list")}
+                      className={`p-2 rounded-md ${
+                        activeView === "list"
+                          ? "bg-color1lite text-color1"
+                          : "text-gray-500 hover:bg-gray-100"
+                      }`}
+                      title="List View"
+                    >
+                      <BarChart2 className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => setActiveView("map")}
+                      className={`p-2 rounded-md ${
+                        activeView === "map"
+                          ? "bg-color1lite text-color1"
+                          : "text-gray-500 hover:bg-gray-100"
+                      }`}
+                      title="Map View"
+                    >
+                      <MapPin className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => setActiveView("analytics")}
+                      className={`p-2 rounded-md ${
+                        activeView === "analytics"
+                          ? "bg-color1lite text-color1"
+                          : "text-gray-500 hover:bg-gray-100"
+                      }`}
+                      title="Analytics View"
+                    >
+                      <TrendingUp className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <button
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center py-2 px-4 rounded-lg border ${
-                  isFilterOpen
-                    ? "bg-color1lite text-color1 border-color1"
-                    : "bg-white border-gray-300 text-gray-600"
-                }`}
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-                {(statusFilter !== "all" || vehicleFilter !== "all") && (
-                  <span className="ml-2 bg-color1lite text-color1 text-xs font-medium px-2 py-0.5 rounded-full">
-                    Active
-                  </span>
-                )}
-              </button>
-
-              <div className="sm:border-l border-gray-300 sm:pl-4 flex items-center space-x-3">
+              {/* Date and export */}
+              <div className="flex items-center space-x-2 w-full sm:w-auto">
+                <div className="relative flex-grow sm:flex-grow-0">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 sm:h-5 sm:w-5" />
+                  <input
+                    type="date"
+                    className="w-full sm:w-auto pl-9 sm:pl-10 pr-4 py-2 text-sm bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color1"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                  />
+                </div>
                 <button
-                  onClick={() => setActiveView("list")}
-                  className={`p-2 rounded-md ${
-                    activeView === "list"
-                      ? "bg-color1lite text-color1"
-                      : "text-gray-500 hover:bg-gray-100"
-                  }`}
-                  title="List View"
+                  onClick={() => exportAllDeliveriesToCSV(deliveriesData)}
+                  className="p-2 bg-color1 text-white rounded-lg shadow hover:bg-color2 transition-colors"
                 >
-                  <BarChart2 className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => setActiveView("map")}
-                  className={`p-2 rounded-md ${
-                    activeView === "map"
-                      ? "bg-color1lite text-color1"
-                      : "text-gray-500 hover:bg-gray-100"
-                  }`}
-                  title="Map View"
-                >
-                  <MapPin className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => setActiveView("analytics")}
-                  className={`p-2 rounded-md ${
-                    activeView === "analytics"
-                      ? "bg-color1lite text-color1"
-                      : "text-gray-500 hover:bg-gray-100"
-                  }`}
-                  title="Analytics View"
-                >
-                  <TrendingUp className="h-5 w-5" />
+                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>
 
-            {/* Right side controls */}
-            <div className="flex items-center space-x-3 w-full sm:w-auto">
-              <div className="relative w-full sm:w-auto">
-                <Calendar className="absolute left-3 text-gray-400 h-5 w-5 top-1/2 -translate-y-1/2" />
-                <input
-                  type="date"
-                  className="pl-10 pr-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-auto"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                />
+            {/* Expanded filters */}
+            {isFilterOpen && (
+              <div className="pt-3 sm:pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      className="w-full px-3 py-1.5 text-sm bg-white border border-color1/20 
+                        rounded-lg shadow-sm outline-none hover:border-color1 
+                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
+                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
+                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
+                        pr-8 transition-all"
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="completed">Completed</option>
+                      <option value="inprogress">In Progress</option>
+                      <option value="pending">Pending</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Vehicle Type
+                    </label>
+                    <select
+                      className="w-full px-3 py-1.5 text-sm bg-white border border-color1/20 
+                        rounded-lg shadow-sm outline-none hover:border-color1 
+                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
+                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
+                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
+                        pr-8 transition-all"
+                      value={vehicleFilter}
+                      onChange={(e) => setVehicleFilter(e.target.value)}
+                    >
+                      <option value="all">All Vehicles</option>
+                      <option value="bike">Bikes</option>
+                      <option value="car">Cars</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Package Size
+                    </label>
+                    <select
+                      className="w-full px-3 py-1.5 text-sm bg-white border border-color1/20 
+                        rounded-lg shadow-sm outline-none hover:border-color1 
+                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
+                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
+                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
+                        pr-8 transition-all"
+                    >
+                      <option>All Sizes</option>
+                      <option>Small</option>
+                      <option>Medium</option>
+                      <option>Large</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sort By
+                    </label>
+                    <select
+                      className="w-full px-3 py-1.5 text-sm bg-white border border-color1/20 
+                        rounded-lg shadow-sm outline-none hover:border-color1 
+                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
+                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
+                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
+                        pr-8 transition-all"
+                    >
+                      <option>Newest First</option>
+                      <option>Oldest First</option>
+                      <option>Distance: Low to High</option>
+                      <option>Distance: High to Low</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={() => exportAllDeliveriesToCSV(deliveriesData)}
-                className="bg-blue-600 text-white p-2 rounded-lg shadow hover:bg-blue-700 transition"
-                title="Export to CSV"
-              >
-                <Download className="h-5 w-5" />
-              </button>
-            </div>
+            )}
           </div>
-
-          {/* Expanded filters */}
-          {isFilterOpen && (
-            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  className="w-full px-3 py-1.5 text-sm bg-white border border-color1/20 
-                        rounded-lg shadow-sm outline-none hover:border-color1 
-                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
-                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
-                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
-                        pr-8 transition-all"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="completed">Completed</option>
-                  <option value="in progress">In Progress</option>
-                  <option value="pending">Pending</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Vehicle Type
-                </label>
-                <select
-                  className="w-full px-3 py-1.5 text-sm bg-white border border-color1/20 
-                        rounded-lg shadow-sm outline-none hover:border-color1 
-                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
-                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
-                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
-                        pr-8 transition-all"
-                  value={vehicleFilter}
-                  onChange={(e) => setVehicleFilter(e.target.value)}
-                >
-                  <option value="all">All Vehicles</option>
-                  <option value="bike">Bikes</option>
-                  <option value="car">Cars</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Package Size
-                </label>
-                <select
-                  className="w-full px-3 py-1.5 text-sm bg-white border border-color1/20 
-                        rounded-lg shadow-sm outline-none hover:border-color1 
-                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
-                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
-                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
-                        pr-8 transition-all"
-                >
-                  <option>All Sizes</option>
-                  <option>Small</option>
-                  <option>Medium</option>
-                  <option>Large</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sort By
-                </label>
-                <select
-                  className="w-full px-3 py-1.5 text-sm bg-white border border-color1/20 
-                        rounded-lg shadow-sm outline-none hover:border-color1 
-                        focus:border-color1 focus:ring-1 focus:ring-color1/50 
-                        cursor-pointer appearance-none bg-[url('/chevron-down.png')] 
-                        bg-no-repeat bg-[center_right_0.5rem] bg-[length:1rem] 
-                        pr-8 transition-all"
-                >
-                  <option>Newest First</option>
-                  <option>Oldest First</option>
-                  <option>Distance: Low to High</option>
-                  <option>Distance: High to Low</option>
-                </select>
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
       {/* MAIN CONTENT AREA */}
-      <main className="container mx-auto mt-6 px-4 pb-10">
+      <main className="container mx-auto mt-4 sm:mt-6 px-3 sm:px-4 pb-6 sm:pb-10">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
@@ -495,47 +661,14 @@ const DeliveriesListPage = () => {
           <>
             {activeView === "list" && (
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                {/* List view header */}
-                <div className="grid grid-cols-7 bg-gray-50 text-gray-700 font-semibold py-4 px-6 border-b">
-                  <span>Vehicle</span>
-                  <span>Size</span>
-                  <span>Origin</span>
-                  <span>Distance</span>
-                  <span>Status</span>
-                  <span>Destination</span>
-                  <span className="text-center">Actions</span>
-                </div>
-
-                {/* Delivery items */}
-                <div className="divide-y divide-gray-100">
-                  {filteredDeliveries.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                      <FaExclamationTriangle className="text-4xl text-gray-400 mb-3" />
-                      <h3 className="text-xl font-medium text-gray-700">
-                        No deliveries found
-                      </h3>
-                      <p className="text-gray-500 max-w-md mt-2">
-                        No deliveries match your current search and filter
-                        criteria. Try adjusting your filters or search term.
-                      </p>
-                      <button
-                        className="mt-4 px-4 py-2 bg-color1 text-white rounded-lg hover:bg-color2 transition"
-                        onClick={() => {
-                          setSearchInput("");
-                          setStatusFilter("all");
-                          setVehicleFilter("all");
-                        }}
-                      >
-                        Reset Filters
-                      </button>
-                    </div>
-                  ) : (
-                    filteredDeliveries.map((delivery) => (
-                      <div
-                        key={delivery._id}
-                        className="grid grid-cols-7 items-center py-4 px-6 hover:bg-color1lite/10 transition-colors"
-                      >
-                        {/* VEHICLE TYPE */}
+                {/* Mobile list view */}
+                <div className="block sm:hidden">
+                  {filteredDeliveries.map((delivery) => (
+                    <div
+                      key={delivery._id}
+                      className="p-4 border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center">
                           <div
                             className={`p-2 rounded-lg ${
@@ -545,133 +678,243 @@ const DeliveriesListPage = () => {
                             }`}
                           >
                             {delivery.vehicletype.toLowerCase() === "bike" ? (
-                              <FaMotorcycle
-                                className={`text-xl ${
-                                  delivery.vehicletype.toLowerCase() === "bike"
-                                    ? "text-color1"
-                                    : "text-color2"
-                                }`}
-                              />
+                              <FaMotorcycle className="text-lg text-color1" />
                             ) : (
-                              <FaCar
-                                className={`text-xl ${
-                                  delivery.vehicletype.toLowerCase() === "bike"
-                                    ? "text-color1"
-                                    : "text-color2"
-                                }`}
-                              />
+                              <FaCar className="text-lg text-color2" />
                             )}
                           </div>
-                          <span className="ml-3 text-sm font-medium text-gray-800">
-                            {delivery.vehicletype}
+                          <span className="ml-2 text-sm font-medium">
+                            {`#${delivery._id.slice(-4)}`}
                           </span>
                         </div>
-
-                        {/* PACKAGE SIZE */}
-                        <span className="text-sm font-medium text-gray-800">
-                          {delivery.packagesize}
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            delivery.status.current.toLowerCase() ===
+                            "completed"
+                              ? "bg-color2lite text-color2"
+                              : "bg-color1lite text-color1"
+                          }`}
+                        >
+                          {delivery.status.current}
                         </span>
+                      </div>
 
-                        {/* START POINT */}
+                      <div className="space-y-2 text-sm">
                         <div className="flex items-center">
-                          <FaMapMarkerAlt className="text-red-500 mr-2 flex-shrink-0" />
-                          <span className="text-sm text-gray-600 truncate">
+                          <FaMapMarkerAlt className="text-red-500 w-4 h-4 mr-2" />
+                          <span className="text-gray-600 truncate">
                             {delivery.startpoint}
                           </span>
                         </div>
-
-                        {/* DISTANCE */}
                         <div className="flex items-center">
-                          <FaRoute className="text-gray-400 mr-2 flex-shrink-0" />
-                          <span className="text-sm text-gray-600">
-                            {delivery.distance}
-                          </span>
-                        </div>
-
-                        {/* STATUS */}
-                        <div>
-                          <span
-                            className={`inline-flex items-center text-color1 text-xs font-medium px-2.5 py-1 rounded-full ${
-                              delivery.status.current.toLowerCase() ===
-                              "completed"
-                                ? "bg-color2lite"
-                                : delivery.status.current.toLowerCase() ===
-                                  "in progress"
-                                ? "bg-color1lite"
-                                : "bg-color3lite"
-                            }`}
-                          >
-                            {delivery.status.current.toLowerCase() ===
-                            "completed" ? (
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                            ) : delivery.status.current.toLowerCase() ===
-                              "in progress" ? (
-                              <Clock className="w-3 h-3 mr-1" />
-                            ) : (
-                              <AlertCircle className="w-3 h-3 mr-1" />
-                            )}
-                            {delivery.status.current}
-                          </span>
-                        </div>
-
-                        {/* END POINT */}
-                        <div className="flex items-center">
-                          <FaMapMarkerAlt className="text-blue-500 mr-2 flex-shrink-0" />
-                          <span className="text-sm text-gray-600 truncate">
+                          <FaMapMarkerAlt className="text-blue-500 w-4 h-4 mr-2" />
+                          <span className="text-gray-600 truncate">
                             {delivery.endpoint}
                           </span>
                         </div>
+                      </div>
 
-                        {/* ACTIONS */}
-                        <div className="flex items-center justify-center space-x-2">
+                      <div className="mt-3 flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500">
+                            {delivery.distance}
+                          </span>
+                          <span className="text-xs text-gray-500">•</span>
+                          <span className="text-xs text-gray-500">
+                            {delivery.packagesize}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
                           <button
                             className="p-2 text-color1 hover:bg-color1lite rounded-full transition"
                             onClick={() => setSelectedDelivery(delivery)}
-                            title="View Details"
                           >
-                            <Eye className="w-5 h-5" />
+                            <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition"
-                            title="Track Delivery"
-                          >
-                            <FaRoute className="w-5 h-5" />
-                          </button>
+                          <TrackButton delivery={delivery} />
                         </div>
                       </div>
-                    ))
-                  )}
+                    </div>
+                  ))}
                 </div>
 
-                {/* Pagination */}
-                <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 bg-gray-50">
-                  <div className="flex items-center text-sm text-gray-500">
-                    Showing{" "}
-                    <span className="font-medium mx-1">
-                      {filteredDeliveries.length}
-                    </span>{" "}
-                    of{" "}
-                    <span className="font-medium mx-1">
-                      {deliveriesData.length}
-                    </span>{" "}
-                    deliveries
+                {/* Desktop list view */}
+                <div className="hidden sm:block">
+                  {/* List view header */}
+                  <div className="grid grid-cols-7 bg-gray-50 text-gray-700 font-semibold py-4 px-6 border-b">
+                    <span>Vehicle</span>
+                    <span>Size</span>
+                    <span>Origin</span>
+                    <span>Distance</span>
+                    <span>Status</span>
+                    <span>Destination</span>
+                    <span className="text-center">Actions</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
-                      Previous
-                    </button>
-                    <button className="px-3 py-1 bg-color1 text-white rounded">
-                      1
-                    </button>
-                    <button className="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
-                      2
-                    </button>
-                    <button className="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
-                      3
-                    </button>
-                    <button className="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
-                      Next
-                    </button>
+
+                  {/* Delivery items */}
+                  <div className="divide-y divide-gray-100">
+                    {filteredDeliveries.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <FaExclamationTriangle className="text-4xl text-gray-400 mb-3" />
+                        <h3 className="text-xl font-medium text-gray-700">
+                          No deliveries found
+                        </h3>
+                        <p className="text-gray-500 max-w-md mt-2">
+                          No deliveries match your current search and filter
+                          criteria. Try adjusting your filters or search term.
+                        </p>
+                        <button
+                          className="mt-4 px-4 py-2 bg-color1 text-white rounded-lg hover:bg-color2 transition"
+                          onClick={() => {
+                            setSearchInput("");
+                            setStatusFilter("all");
+                            setVehicleFilter("all");
+                          }}
+                        >
+                          Reset Filters
+                        </button>
+                      </div>
+                    ) : (
+                      filteredDeliveries.map((delivery) => (
+                        <div
+                          key={delivery._id}
+                          className="grid grid-cols-7 items-center py-4 px-6 hover:bg-color1lite/10 transition-colors"
+                        >
+                          {/* VEHICLE TYPE */}
+                          <div className="flex items-center">
+                            <div
+                              className={`p-2 rounded-lg ${
+                                delivery.vehicletype.toLowerCase() === "bike"
+                                  ? "bg-color1lite"
+                                  : "bg-color2lite"
+                              }`}
+                            >
+                              {delivery.vehicletype.toLowerCase() === "bike" ? (
+                                <FaMotorcycle
+                                  className={`text-xl ${
+                                    delivery.vehicletype.toLowerCase() ===
+                                    "bike"
+                                      ? "text-color1"
+                                      : "text-color2"
+                                  }`}
+                                />
+                              ) : (
+                                <FaCar
+                                  className={`text-xl ${
+                                    delivery.vehicletype.toLowerCase() ===
+                                    "bike"
+                                      ? "text-color1"
+                                      : "text-color2"
+                                  }`}
+                                />
+                              )}
+                            </div>
+                            <span className="ml-3 text-sm font-medium text-gray-800">
+                              {delivery.vehicletype}
+                            </span>
+                          </div>
+
+                          {/* PACKAGE SIZE */}
+                          <span className="text-sm font-medium text-gray-800">
+                            {delivery.packagesize}
+                          </span>
+
+                          {/* START POINT */}
+                          <div className="flex items-center">
+                            <FaMapMarkerAlt className="text-red-500 mr-2 flex-shrink-0" />
+                            <span className="text-sm text-gray-600 truncate">
+                              {delivery.startpoint}
+                            </span>
+                          </div>
+
+                          {/* DISTANCE */}
+                          <div className="flex items-center">
+                            <FaRoute className="text-gray-400 mr-2 flex-shrink-0" />
+                            <span className="text-sm text-gray-600">
+                              {delivery.distance}
+                            </span>
+                          </div>
+
+                          {/* STATUS */}
+                          <div>
+                            <span
+                              className={`inline-flex items-center text-color1 text-xs font-medium px-2.5 py-1 rounded-full ${
+                                delivery.status.current.toLowerCase() ===
+                                "completed"
+                                  ? "bg-color2lite"
+                                  : delivery.status.current.toLowerCase() ===
+                                    "inprogress"
+                                  ? "bg-color1lite"
+                                  : "bg-color3lite"
+                              }`}
+                            >
+                              {delivery.status.current.toLowerCase() ===
+                              "completed" ? (
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                              ) : delivery.status.current.toLowerCase() ===
+                                "inprogress" ? (
+                                <Clock className="w-3 h-3 mr-1" />
+                              ) : (
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                              )}
+                              {delivery.status.current}
+                            </span>
+                          </div>
+
+                          {/* END POINT */}
+                          <div className="flex items-center">
+                            <FaMapMarkerAlt className="text-blue-500 mr-2 flex-shrink-0" />
+                            <span className="text-sm text-gray-600 truncate">
+                              {delivery.endpoint}
+                            </span>
+                          </div>
+
+                          {/* ACTIONS */}
+                          <div className="flex items-center justify-center space-x-2">
+                            <button
+                              className="p-2 text-color1 hover:bg-color1lite rounded-full transition"
+                              onClick={() => setSelectedDelivery(delivery)}
+                              title="View Details"
+                            >
+                              <Eye className="w-5 h-5" />
+                            </button>
+                            <TrackButton delivery={delivery} />
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="flex items-center justify-between border-t border-gray-200 px-6 py-3 bg-gray-50">
+                    <div className="flex items-center text-sm text-gray-500">
+                      Showing{" "}
+                      <span className="font-medium mx-1">
+                        {filteredDeliveries.length}
+                      </span>{" "}
+                      of{" "}
+                      <span className="font-medium mx-1">
+                        {deliveriesData.length}
+                      </span>{" "}
+                      deliveries
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button className="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
+                        Previous
+                      </button>
+                      <button className="px-3 py-1 bg-color1 text-white rounded">
+                        1
+                      </button>
+                      <button className="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
+                        2
+                      </button>
+                      <button className="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
+                        3
+                      </button>
+                      <button className="px-3 py-1 rounded border border-gray-300 text-gray-500 hover:bg-gray-100">
+                        Next
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -682,12 +925,22 @@ const DeliveriesListPage = () => {
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">
                   Delivery Map View
                 </h2>
-                <DeliveryMap deliveries={filteredDeliveries} />
+                <DeliveryMap
+                  deliveries={filteredDeliveries}
+                  onDeliveryClick={handleDeliveryClick}
+                  trackingDeliveryId={trackingDeliveryId}
+                />
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {filteredDeliveries.slice(0, 3).map((delivery) => (
+                  {filteredDeliveries.map((delivery) => (
                     <div
                       key={delivery._id}
-                      className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:border-blue-300 transition"
+                      onClick={() => handleDeliveryClick(delivery)}
+                      className={`bg-gray-50 rounded-lg p-4 border-2 transition-all cursor-pointer
+                        ${
+                          selectedDelivery?._id === delivery._id
+                            ? "border-blue-500 shadow-lg"
+                            : "border-gray-200 hover:border-blue-300"
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
@@ -733,41 +986,92 @@ const DeliveriesListPage = () => {
 
             {activeView === "analytics" && (
               <div className="bg-white rounded-xl shadow-lg overflow-hidden p-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">
-                  Delivery Analytics
+                <h2 className="text-lg font-semibold text-gray-800 mb-6">
+                  Delivery Analytics Overview
                 </h2>
-                <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">
-                    Analytics charts would be displayed here
-                  </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Delivery Status Chart */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-800 mb-4">
+                      Delivery Status Distribution
+                    </h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={analyticsData?.statusData || []}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="value" fill="#001F3E" />{" "}
+                          {/* Changed to color1 */}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Vehicle Type Distribution */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-800 mb-4">
+                      Vehicle Type Distribution
+                    </h3>
+                    <div className="h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={analyticsData?.vehicleData || []}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <Tooltip />
+                          <Bar dataKey="value" fill="#7EA852" />{" "}
+                          {/* Changed to color2 */}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Metrics Cards */}
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-800">
-                      Average Delivery Time
-                    </h3>
-                    <p className="text-2xl font-bold mt-2">32 min</p>
-                    <p className="text-green-600 text-sm flex items-center mt-1">
-                      <TrendingUp className="h-4 w-4 mr-1" />
-                      5% faster than last week
-                    </p>
-                  </div>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-800">
-                      Completion Rate
-                    </h3>
-                    <p className="text-2xl font-bold mt-2">94%</p>
-                    <p className="text-green-600 text-sm flex items-center mt-1">
-                      <TrendingUp className="h-4 w-4 mr-1" />
-                      2% improvement
-                    </p>
-                  </div>
                   <div className="bg-gray-50 p-4 rounded-lg">
                     <h3 className="font-medium text-gray-800">
                       Average Distance
                     </h3>
-                    <p className="text-2xl font-bold mt-2">8.7 km</p>
+                    <p className="text-2xl font-bold mt-2 text-color1">
+                      {" "}
+                      {/* Added text color */}
+                      {analyticsData?.averageDistance || "0"} km
+                    </p>
                     <p className="text-gray-500 text-sm mt-1">Per delivery</p>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-800">
+                      Completion Rate
+                    </h3>
+                    <p className="text-2xl font-bold mt-2 text-color2">
+                      {" "}
+                      {/* Added text color */}
+                      {analyticsData?.completionRate || "0"}%
+                    </p>
+                    <p className="text-gray-500 text-sm mt-1">
+                      Of total deliveries
+                    </p>
+                  </div>
+
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-800">
+                      Active Deliveries
+                    </h3>
+                    <p className="text-2xl font-bold mt-2 text-color1">
+                      {" "}
+                      {/* Added text color */}
+                      {analyticsData?.statusData.find(
+                        (s) => s.name === "In Progress"
+                      )?.value || 0}
+                    </p>
+                    <p className="text-gray-500 text-sm mt-1">
+                      Currently in progress
+                    </p>
                   </div>
                 </div>
               </div>
