@@ -28,11 +28,7 @@ export async function PUT(
       }
     }
 
-    // Debug log the params being sent
-    console.log("Update params:", Object.fromEntries(queryParams.entries()));
-
     const apiUrl = `${BASE_URL}/admins/${params.id}/update?${queryParams}`;
-    console.log("Request URL:", apiUrl);
 
     const response = await fetch(apiUrl, {
       method: "PUT",
@@ -42,8 +38,6 @@ export async function PUT(
     });
 
     const responseText = await response.text();
-    console.log("Status:", response.status);
-    console.log("Response:", responseText);
 
     if (!response.ok) {
       return NextResponse.json(

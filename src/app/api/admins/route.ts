@@ -54,13 +54,6 @@ export async function POST(req: NextRequest) {
     formData.append("password", body.password.trim());
     formData.append("role", body.role.trim().toLowerCase());
 
-    console.log("Sending signup request:", {
-      username: body.username,
-      email: body.email,
-      password: "[REDACTED]",
-      role: body.role,
-    });
-
     const response = await fetch(`${BASE_URL}/admin/signup`, {
       method: "POST",
       headers: {
@@ -71,8 +64,6 @@ export async function POST(req: NextRequest) {
     });
 
     const responseText = await response.text();
-    console.log("Signup response status:", response.status);
-    console.log("Signup response:", responseText);
 
     let data;
     try {

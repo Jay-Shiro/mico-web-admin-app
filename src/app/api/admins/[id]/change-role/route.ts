@@ -14,11 +14,6 @@ export async function PUT(
       return NextResponse.json({ error: "Role is required" }, { status: 400 });
     }
 
-    console.log("Sending to API:", {
-      url: `${BASE_URL}/admins/${adminId}/change-role`,
-      role: role,
-    });
-
     const response = await fetch(`${BASE_URL}/admins/${adminId}/change-role`, {
       method: "PUT",
       headers: {
@@ -28,7 +23,6 @@ export async function PUT(
     });
 
     const data = await response.json();
-    console.log("Backend response:", data);
 
     if (!response.ok) {
       throw new Error(

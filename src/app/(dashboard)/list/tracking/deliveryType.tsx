@@ -4,6 +4,7 @@ import { User } from "@/types/userType";
 export interface DeliveryType {
   _id: string;
   user_id: string;
+  rider_id: string | null;
   price: number;
   distance: string;
   startpoint: string;

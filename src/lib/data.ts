@@ -533,69 +533,69 @@ export const subjectsData = [
   },
 ];
 
-export const deliveriesData: DeliveryType[] = [
-  {
-    _id: "23523432343",
-    user_id: "1234567890",
-    price: 0,
-    distance: "5 km",
-    startpoint:
-      "DRAGON WOK EXPRESS, Adetokunbo Ademola Crescent, Abuja, Nigeria",
-    endpoint: "Results Fitness, Richmond Highway, Alexandria, VA, USA",
-    stops: [],
-    vehicletype: "bike",
-    transactiontype: "cash",
-    packagesize: "Quarter and below",
-    deliveryspeed: "standard",
-    status: {
-      deliverystatus: "completed",
-      orderstatus: "completed",
-      riderid: "1",
-      transactioninfo: {
-        status: "pending",
-        payment_method: "cash",
-        payment_id: null,
-        payment_date: "2025-03-20T08:53:40.804000",
-      },
-    },
-    transaction_info: {
-      payment_status: "pending",
-      payment_date: "2025-03-20T08:53:40.804000",
-      last_updated: "2025-03-20T07:53:42.642000",
-    },
-    last_updated: "2025-03-21T11:56:30.096000",
-  },
-  {
-    _id: "8765432109",
-    user_id: "9876543210",
-    price: 5,
-    distance: "10 km",
-    startpoint: "Lekki Mall, Admiralty Way, Lagos, Nigeria",
-    endpoint: "Eko Hotel & Suites, Adetokunbo Ademola Street, Lagos, Nigeria",
-    stops: [],
-    vehicletype: "bike",
-    transactiontype: "cash",
-    packagesize: "Medium",
-    deliveryspeed: "express",
-    status: {
-      deliverystatus: "pending",
-      orderstatus: "pending",
-      riderid: "2",
-      transactioninfo: {
-        status: "paid",
-        payment_method: "cash",
-        payment_id: null,
-        payment_date: "2025-03-22T08:20:10.654000",
-      },
-    },
-    transaction_info: {
-      payment_status: "paid",
-      payment_date: "2025-03-22T08:20:10.654000",
-      last_updated: "2025-03-22T08:21:42.612000",
-    },
-    last_updated: "2025-03-22T09:30:15.120000",
-  },
-];
+// export const deliveriesData: DeliveryType[] = [
+//   {
+//     _id: "23523432343",
+//     user_id: "1234567890",
+//     price: 0,
+//     distance: "5 km",
+//     startpoint:
+//       "DRAGON WOK EXPRESS, Adetokunbo Ademola Crescent, Abuja, Nigeria",
+//     endpoint: "Results Fitness, Richmond Highway, Alexandria, VA, USA",
+//     stops: [],
+//     vehicletype: "bike",
+//     transactiontype: "cash",
+//     packagesize: "Quarter and below",
+//     deliveryspeed: "standard",
+//     status: {
+//       deliverystatus: "completed",
+//       orderstatus: "completed",
+//       riderid: "1",
+//       transactioninfo: {
+//         status: "pending",
+//         payment_method: "cash",
+//         payment_id: null,
+//         payment_date: "2025-03-20T08:53:40.804000",
+//       },
+//     },
+//     transaction_info: {
+//       payment_status: "pending",
+//       payment_date: "2025-03-20T08:53:40.804000",
+//       last_updated: "2025-03-20T07:53:42.642000",
+//     },
+//     last_updated: "2025-03-21T11:56:30.096000",
+//   },
+//   {
+//     _id: "8765432109",
+//     user_id: "9876543210",
+//     price: 5,
+//     distance: "10 km",
+//     startpoint: "Lekki Mall, Admiralty Way, Lagos, Nigeria",
+//     endpoint: "Eko Hotel & Suites, Adetokunbo Ademola Street, Lagos, Nigeria",
+//     stops: [],
+//     vehicletype: "bike",
+//     transactiontype: "cash",
+//     packagesize: "Medium",
+//     deliveryspeed: "express",
+//     status: {
+//       deliverystatus: "pending",
+//       orderstatus: "pending",
+//       riderid: "2",
+//       transactioninfo: {
+//         status: "paid",
+//         payment_method: "cash",
+//         payment_id: null,
+//         payment_date: "2025-03-22T08:20:10.654000",
+//       },
+//     },
+//     transaction_info: {
+//       payment_status: "paid",
+//       payment_date: "2025-03-22T08:20:10.654000",
+//       last_updated: "2025-03-22T08:21:42.612000",
+//     },
+//     last_updated: "2025-03-22T09:30:15.120000",
+//   },
+// ];
 
 export const lessonsData = [
   {

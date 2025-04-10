@@ -47,18 +47,23 @@ export async function GET() {
     const ridersMap = new Map(riders.map((rider) => [rider._id, rider]));
 
     // Transform deliveries with full user and rider data
-    const transformedDeliveries = deliveries.map((delivery) => ({
-      ...delivery,
-      user: usersMap.get(delivery.user_id),
-      rider: delivery.status?.riderid
-        ? ridersMap.get(delivery.status.riderid)
-        : undefined,
-      status: {
-        ...delivery.status,
-        deliverystatus:
-          delivery.status?.deliverystatus?.toLowerCase() || "pending",
-      },
-    }));
+    const transformedDeliveries = deliveries.map((delivery) => {
+      const rider = delivery.rider_id ? ridersMap.get(delivery.rider_id) : null;
+      if (delivery.rider_id && !rider) {
+        console.log("Missing rider for ID:", delivery.rider_id);
+      }
+
+      return {
+        ...delivery,
+        user: usersMap.get(delivery.user_id),
+        rider: rider || null, // Ensure we return null instead of undefined
+        status: {
+          ...delivery.status,
+          deliverystatus:
+            delivery.status?.deliverystatus?.toLowerCase() || "pending",
+        },
+      };
+    });
 
     return NextResponse.json(
       {

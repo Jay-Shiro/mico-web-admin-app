@@ -36,6 +36,7 @@ export async function GET() {
       throw new Error("Failed to fetch required data");
     }
 
+    // Parse responses
     const { deliveries }: { deliveries: DeliveryType[] } =
       await deliveriesRes.json();
     const { users }: { users: User[] } = await usersRes.json();
@@ -46,23 +47,35 @@ export async function GET() {
     const ridersMap = new Map(riders.map((rider) => [rider._id, rider]));
 
     // Transform deliveries with full user and rider data
-    const transformedDeliveries = deliveries.map((delivery) => ({
-      ...delivery,
-      user: usersMap.get(delivery.user_id),
-      rider: delivery.status?.riderid
-        ? ridersMap.get(delivery.status.riderid)
-        : undefined,
-      status: {
-        ...delivery.status,
-        deliverystatus:
-          delivery.status?.deliverystatus?.toLowerCase() || "pending",
-      },
-    }));
+    const transformedDeliveries = deliveries.map((delivery) => {
+      // Get rider ID from either rider_id or status.riderid
+      const riderId = delivery.rider_id || delivery.status?.riderid;
+      const rider = riderId ? ridersMap.get(riderId) : null;
+
+      if (riderId && !rider) {
+        console.log("Missing rider for ID:", riderId);
+      }
+
+      return {
+        ...delivery,
+        user: usersMap.get(delivery.user_id),
+        rider: rider || null,
+        status: {
+          ...delivery.status,
+          deliverystatus:
+            delivery.status?.deliverystatus?.toLowerCase() || "pending",
+        },
+      };
+    });
 
     // Handle case where no deliveries are found
     if (!transformedDeliveries || transformedDeliveries.length === 0) {
       return NextResponse.json(
-        { status: "success", message: "No deliveries found", deliveries: [] },
+        {
+          status: "success",
+          message: "No deliveries found",
+          deliveries: [],
+        },
         { status: 200 }
       );
     }
@@ -74,7 +87,10 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching deliveries: ", error);
     return NextResponse.json(
-      { error: "Failed to fetch deliveries data" },
+      {
+        error: "Failed to fetch deliveries data",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

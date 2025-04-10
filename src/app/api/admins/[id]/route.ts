@@ -7,8 +7,6 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    console.log("Deleting admin:", params.id);
-
     const response = await fetch(`${BASE_URL}/admins/${params.id}/delete`, {
       method: "DELETE", // The API expects DELETE
       headers: {
@@ -17,7 +15,6 @@ export async function DELETE(
     });
 
     const responseText = await response.text();
-    console.log("Delete response:", responseText);
 
     let data;
     try {
