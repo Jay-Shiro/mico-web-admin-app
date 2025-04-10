@@ -59,8 +59,7 @@ export async function GET() {
         rider: rider || null, // Ensure we return null instead of undefined
         status: {
           ...delivery.status,
-          deliverystatus:
-            delivery.status?.deliverystatus?.toLowerCase() || "pending",
+          current: delivery.status?.current?.toLowerCase() || "pending",
         },
       };
     });

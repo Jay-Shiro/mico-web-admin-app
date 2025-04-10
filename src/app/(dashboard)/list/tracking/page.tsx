@@ -91,13 +91,13 @@ const DeliveriesListPage = () => {
   const metrics = useMemo(() => {
     const total = filteredDeliveries.length;
     const completed = filteredDeliveries.filter(
-      (d) => d.status.deliverystatus.toLowerCase() === "completed"
+      (d) => d.status.current.toLowerCase() === "completed"
     ).length;
     const inProgress = filteredDeliveries.filter(
-      (d) => d.status.deliverystatus.toLowerCase() === "in progress"
+      (d) => d.status.current.toLowerCase() === "in progress"
     ).length;
     const pending = filteredDeliveries.filter(
-      (d) => d.status.deliverystatus.toLowerCase() === "pending"
+      (d) => d.status.current.toLowerCase() === "pending"
     ).length;
     const bikes = filteredDeliveries.filter(
       (d) => d.vehicletype.toLowerCase() === "bike"
@@ -119,7 +119,7 @@ const DeliveriesListPage = () => {
     // Search filter
     if (searchInput) {
       filtered = filtered.filter((delivery) =>
-        `${delivery._id} ${delivery.vehicletype} ${delivery.packagesize} ${delivery.startpoint} ${delivery.distance} ${delivery.status.deliverystatus} ${delivery.endpoint}`
+        `${delivery._id} ${delivery.vehicletype} ${delivery.packagesize} ${delivery.startpoint} ${delivery.distance} ${delivery.status.current} ${delivery.endpoint}`
           .toLowerCase()
           .includes(searchInput.toLowerCase())
       );
@@ -129,8 +129,7 @@ const DeliveriesListPage = () => {
     if (statusFilter !== "all") {
       filtered = filtered.filter(
         (delivery) =>
-          delivery.status.deliverystatus.toLowerCase() ===
-          statusFilter.toLowerCase()
+          delivery.status.current.toLowerCase() === statusFilter.toLowerCase()
       );
     }
 
@@ -593,25 +592,25 @@ const DeliveriesListPage = () => {
                         <div>
                           <span
                             className={`inline-flex items-center text-color1 text-xs font-medium px-2.5 py-1 rounded-full ${
-                              delivery.status.deliverystatus.toLowerCase() ===
+                              delivery.status.current.toLowerCase() ===
                               "completed"
                                 ? "bg-color2lite"
-                                : delivery.status.deliverystatus.toLowerCase() ===
+                                : delivery.status.current.toLowerCase() ===
                                   "in progress"
                                 ? "bg-color1lite"
                                 : "bg-color3lite"
                             }`}
                           >
-                            {delivery.status.deliverystatus.toLowerCase() ===
+                            {delivery.status.current.toLowerCase() ===
                             "completed" ? (
                               <CheckCircle className="w-3 h-3 mr-1" />
-                            ) : delivery.status.deliverystatus.toLowerCase() ===
+                            ) : delivery.status.current.toLowerCase() ===
                               "in progress" ? (
                               <Clock className="w-3 h-3 mr-1" />
                             ) : (
                               <AlertCircle className="w-3 h-3 mr-1" />
                             )}
-                            {delivery.status.deliverystatus}
+                            {delivery.status.current}
                           </span>
                         </div>
 
@@ -703,13 +702,13 @@ const DeliveriesListPage = () => {
                         </div>
                         <span
                           className={`text-xs font-medium px-2 py-1 rounded-full ${
-                            delivery.status.deliverystatus.toLowerCase() ===
+                            delivery.status.current.toLowerCase() ===
                             "completed"
                               ? "bg-green-100 text-green-800"
                               : "bg-yellow-100 text-yellow-800"
                           }`}
                         >
-                          {delivery.status.deliverystatus}
+                          {delivery.status.current}
                         </span>
                       </div>
                       <div className="mt-3 text-sm">

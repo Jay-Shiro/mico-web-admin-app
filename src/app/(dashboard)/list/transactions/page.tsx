@@ -91,7 +91,7 @@ export default function TransactionsPage() {
           { name: "user.lastname", weight: 1.5 },
           { name: "rider.firstname", weight: 1.5 },
           { name: "rider.lastname", weight: 1.5 },
-          { name: "status.deliverystatus", weight: 1 },
+          { name: "status.current", weight: 1 },
           { name: "price", weight: 1 },
           {
             name: "transaction_info.payment_date",
@@ -140,7 +140,8 @@ export default function TransactionsPage() {
       // Status filter handling
       const statusFilter =
         !selectedType ||
-        t.status?.deliverystatus?.toLowerCase() === selectedType.toLowerCase();
+        t.transaction_info?.payment_status?.toLowerCase() ===
+          selectedType.toLowerCase();
 
       // Rider filter handling
       const riderFilter = !selectedRider || t.rider?._id === selectedRider;
@@ -176,10 +177,10 @@ export default function TransactionsPage() {
   // Summary metrics - based on delivery status
   const total = filtered.length;
   const completed = filtered.filter(
-    (t) => t.status?.deliverystatus === "completed"
+    (t) => t.transaction_info?.payment_status === "completed"
   ).length;
   const pending = filtered.filter(
-    (t) => t.status?.deliverystatus === "pending"
+    (t) => t.transaction_info?.payment_status === "pending"
   ).length;
 
   // Chart data: daily volume
@@ -447,7 +448,7 @@ export default function TransactionsPage() {
                     ₦{(delivery.price ?? 0).toFixed(2)}
                   </td>
                   <td className="px-4 py-2 text-xs capitalize">
-                    {delivery.status?.deliverystatus}
+                    {delivery.transaction_info?.payment_status}
                   </td>
                   <td className="px-4 py-2 text-xs">
                     {delivery.rider

@@ -36,14 +36,14 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
           </div>
           <div
             className={`px-3 py-1 rounded-full text-sm font-medium ${
-              transaction.status?.deliverystatus === "completed"
+              transaction.transaction_info?.payment_status === "completed"
                 ? "bg-green-100 text-green-800"
-                : transaction.status?.deliverystatus === "pending"
+                : transaction.transaction_info?.payment_status === "pending"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-gray-100 text-gray-800"
             }`}
           >
-            Status: {transaction.status?.deliverystatus}
+            Payment Status: {transaction.transaction_info?.payment_status}
           </div>
         </div>
 

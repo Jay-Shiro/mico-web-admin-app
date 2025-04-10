@@ -15,6 +15,7 @@ export interface DeliveryType {
   packagesize?: string;
   deliveryspeed: "express" | "standard";
   status: {
+    current: string;
     deliverystatus: string;
     orderstatus: string;
     riderid: string | null;

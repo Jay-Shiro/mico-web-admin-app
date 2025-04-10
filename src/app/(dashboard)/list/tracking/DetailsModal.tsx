@@ -159,14 +159,14 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
             <p className="text-gray-700 font-medium">Status:</p>
             <span
               className={`px-4 py-1.5 rounded-lg text-white text-sm ${
-                delivery.status.deliverystatus === "in transit"
+                delivery.status.current === "in transit"
                   ? "bg-color2/20"
-                  : delivery.status.deliverystatus === "completed"
+                  : delivery.status.current === "completed"
                   ? "bg-color2/80"
                   : "bg-color1/50"
               }`}
             >
-              {delivery.status.deliverystatus}
+              {delivery.status.current}
             </span>
           </div>
           <div className="mt-2 text-gray-500 space-y-1">
