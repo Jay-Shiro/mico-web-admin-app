@@ -457,7 +457,7 @@ export default function TransactionsPage() {
                   <td className="px-4 py-2">
                     <button
                       onClick={() => setSelectedTransaction(delivery)}
-                      className="p-1 hover:bg-color1 hover:text-white rounded-full"
+                      className="p-1 hover:bg-color1lite hover:text-white rounded-full"
                       title="View Details"
                     >
                       <BsThreeDots className="text-color1" />
