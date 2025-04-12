@@ -134,7 +134,7 @@ const RidersListPage = () => {
       setUpdating(true);
       setUpdatingMessage("Updating, Please wait....");
 
-      const response = await fetch("/api/riders/delete", {
+      const response = await fetch("/api/riders", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

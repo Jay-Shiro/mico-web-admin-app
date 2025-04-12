@@ -32,13 +32,22 @@ export async function GET() {
       }),
     ]);
 
-    if (!deliveriesRes.ok || !usersRes.ok || !ridersRes.ok) {
+    // For users and riders, throw error if not ok
+    if (!usersRes.ok || !ridersRes.ok) {
       throw new Error("Failed to fetch required data");
     }
 
-    // Parse responses
-    const { deliveries }: { deliveries: DeliveryType[] } =
-      await deliveriesRes.json();
+    // For deliveries, if 404 treat it as no deliveries; otherwise if error, throw
+    let deliveriesData = { deliveries: [] };
+    if (deliveriesRes.ok) {
+      deliveriesData = await deliveriesRes.json();
+    } else if (deliveriesRes.status === 404) {
+      deliveriesData = { deliveries: [] };
+    } else {
+      throw new Error("Failed to fetch deliveries");
+    }
+
+    // Parse remaining responses
     const { users }: { users: User[] } = await usersRes.json();
     const { riders }: { riders: Rider[] } = await ridersRes.json();
 
@@ -47,28 +56,30 @@ export async function GET() {
     const ridersMap = new Map(riders.map((rider) => [rider._id, rider]));
 
     // Transform deliveries with full user and rider data
-    const transformedDeliveries = deliveries.map((delivery) => {
-      // Get rider ID from either rider_id or status.riderid
-      const riderId = delivery.rider_id || delivery.status?.riderid;
-      const rider = riderId ? ridersMap.get(riderId) : null;
+    const transformedDeliveries = deliveriesData.deliveries.map(
+      (delivery: DeliveryType) => {
+        // Get rider ID from either rider_id or status.riderid
+        const riderId = delivery.rider_id || delivery.status?.riderid;
+        const rider = riderId ? ridersMap.get(riderId) : null;
 
-      if (riderId && !rider) {
-        console.log("Missing rider for ID:", riderId);
+        if (riderId && !rider) {
+          console.log("Missing rider for ID:", riderId);
+        }
+
+        return {
+          ...delivery,
+          user: usersMap.get(delivery.user_id),
+          rider: rider || null,
+          status: {
+            ...delivery.status,
+            current: delivery.status?.current?.toLowerCase() || "pending",
+          },
+        };
       }
+    );
 
-      return {
-        ...delivery,
-        user: usersMap.get(delivery.user_id),
-        rider: rider || null,
-        status: {
-          ...delivery.status,
-          current: delivery.status?.current?.toLowerCase() || "pending",
-        },
-      };
-    });
-
-    // Handle case where no deliveries are found
-    if (!transformedDeliveries || transformedDeliveries.length === 0) {
+    // Return empty list if no deliveries
+    if (transformedDeliveries.length === 0) {
       return NextResponse.json(
         {
           status: "success",
