@@ -10,6 +10,7 @@ export type Rider = {
   earnings: number;
   nin: string;
   bvn: string;
+  branding: string;
   vehicle_type: string;
   date_joined: string;
   accountbank: string;
