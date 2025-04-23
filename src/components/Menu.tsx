@@ -26,6 +26,12 @@ const menuItems = [
         visible: ["admin"],
       },
       {
+        icon: "/broadcast.png",
+        label: "Broadcast",
+        href: "/list/broadcast",
+        visible: ["admin"],
+      },
+      {
         icon: "/tracking.png",
         label: "Tracking",
         href: "/list/tracking",

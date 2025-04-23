@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import apiCache from "@/utils/apiCache";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
@@ -18,7 +19,9 @@ export async function PUT(
 
     const response = await fetch(`${BASE_URL}/riders/${riderId}/${action}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "Cache-Control": "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
       },
       cache: "no-store",
     });
@@ -30,6 +33,11 @@ export async function PUT(
         { status: response.status }
       );
     }
+
+    // Invalidate relevant caches when rider status changes
+    apiCache.clearByPrefix(`${BASE_URL}/riders`);
+    // Also clear deliveries cache since they include rider data
+    apiCache.clearByPrefix(`${BASE_URL}/deliveries`);
 
     return NextResponse.json({ status: "success", action });
   } catch (error) {

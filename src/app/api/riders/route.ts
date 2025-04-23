@@ -1,25 +1,22 @@
 import { NextResponse, NextRequest } from "next/server";
+import apiCache from "@/utils/apiCache";
+import { fetchWithCache } from "@/utils/fetchWithCache";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 export async function GET() {
   try {
-    const response = await fetch(`${BASE_URL}/riders`, {
+    const RIDERS_TTL = 5 * 60 * 1000; // 5 minutes cache
+
+    const data = await fetchWithCache(`${BASE_URL}/riders`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache",
       },
-      cache: "no-store",
+      cacheTTL: RIDERS_TTL,
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `API request failed with status ${response.status} \n Error message: ${response.statusText}`
-      );
-    }
-
-    const data = await response.json();
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
     console.error("Error fetching riders: ", error);
@@ -54,6 +51,9 @@ export async function DELETE(req: NextRequest) {
     if (!response.ok) {
       throw new Error(`Failed to delete riders: ${response.statusText}`);
     }
+
+    // Invalidate rider-related caches after deletion
+    apiCache.clearByPrefix(`${BASE_URL}/riders`);
 
     const data = await response.json();
     return NextResponse.json(data, { status: 200 });

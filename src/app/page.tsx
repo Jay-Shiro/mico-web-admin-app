@@ -5,7 +5,6 @@ import React from "react";
 const Homepage = () => {
   return (
     <main className="min-h-screen bg-gradient-to-br from-color1 to-color1lite flex flex-col items-center justify-center text-white font-sans px-6">
-      
       {/* Hero Section */}
       <section className="text-center mb-20 animate-fade-in">
         <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight drop-shadow-xl leading-tight">
@@ -36,7 +35,8 @@ const Homepage = () => {
       <footer className="mt-20 text-sm text-color3lite text-center animate-fade-in-down">
         <p>
           © {new Date().getFullYear()}{" "}
-          <span className="font-semibold">Mico Admin</span>. All rights reserved.
+          <span className="font-semibold">Mico Admin</span>. All rights
+          reserved.
         </p>
       </footer>
     </main>

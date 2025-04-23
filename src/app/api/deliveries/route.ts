@@ -2,81 +2,97 @@ import { NextResponse } from "next/server";
 import { DeliveryType } from "@/app/(dashboard)/list/tracking/deliveryType";
 import { User } from "@/types/userType";
 import { Rider } from "@/app/(dashboard)/list/riders/riderType";
+import { fetchWithCache } from "@/utils/fetchWithCache";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 export async function GET() {
   try {
-    // Fetch all required data in parallel
-    const [deliveriesRes, usersRes, ridersRes] = await Promise.all([
-      fetch(`${BASE_URL}/deliveries`, {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-        },
-        cache: "no-store",
-      }),
-      fetch(`${BASE_URL}/users`, {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-        },
-        cache: "no-store",
-      }),
-      fetch(`${BASE_URL}/riders`, {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-        },
-        cache: "no-store",
-      }),
-    ]);
+    // Cache TTLs
+    const DELIVERIES_TTL = 60 * 1000; // 1 minute
+    const USERS_TTL = 5 * 60 * 1000; // 5 minutes
+    const RIDERS_TTL = 5 * 60 * 1000; // 5 minutes
 
-    // For users and riders, throw error if not ok
-    if (!usersRes.ok || !ridersRes.ok) {
-      throw new Error("Failed to fetch required data");
+    // Common fetch options
+    const fetchOptions = {
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+      },
+    };
+
+    // Fetch all required data in parallel with caching
+    let deliveriesData;
+    let usersData;
+    let ridersData;
+
+    try {
+      [deliveriesData, usersData, ridersData] = await Promise.all([
+        fetchWithCache(`${BASE_URL}/deliveries`, {
+          ...fetchOptions,
+          cacheTTL: DELIVERIES_TTL,
+        }),
+        fetchWithCache(`${BASE_URL}/users`, {
+          ...fetchOptions,
+          cacheTTL: USERS_TTL,
+        }),
+        fetchWithCache(`${BASE_URL}/riders`, {
+          ...fetchOptions,
+          cacheTTL: RIDERS_TTL,
+        }),
+      ]);
+    } catch (error) {
+      // Handle 404 for deliveries specially
+      if (
+        error instanceof Error &&
+        error.message.includes("API request failed: 404")
+      ) {
+        deliveriesData = { deliveries: [] };
+
+        // Still need users and riders data
+        [usersData, ridersData] = await Promise.all([
+          fetchWithCache(`${BASE_URL}/users`, {
+            ...fetchOptions,
+            cacheTTL: USERS_TTL,
+          }),
+          fetchWithCache(`${BASE_URL}/riders`, {
+            ...fetchOptions,
+            cacheTTL: RIDERS_TTL,
+          }),
+        ]);
+      } else {
+        throw error;
+      }
     }
 
-    // For deliveries, if 404 treat it as no deliveries; otherwise if error, throw
-    let deliveriesData = { deliveries: [] };
-    if (deliveriesRes.ok) {
-      deliveriesData = await deliveriesRes.json();
-    } else if (deliveriesRes.status === 404) {
-      deliveriesData = { deliveries: [] };
-    } else {
-      throw new Error("Failed to fetch deliveries");
-    }
-
-    // Parse remaining responses
-    const { users }: { users: User[] } = await usersRes.json();
-    const { riders }: { riders: Rider[] } = await ridersRes.json();
+    const { deliveries = [] } = deliveriesData;
+    const { users } = usersData;
+    const { riders } = ridersData;
 
     // Create lookup maps for quick access
-    const usersMap = new Map(users.map((user) => [user._id, user]));
-    const ridersMap = new Map(riders.map((rider) => [rider._id, rider]));
+    const usersMap = new Map(users.map((user: User) => [user._id, user]));
+    const ridersMap = new Map(riders.map((rider: Rider) => [rider._id, rider]));
 
     // Transform deliveries with full user and rider data
-    const transformedDeliveries = deliveriesData.deliveries.map(
-      (delivery: DeliveryType) => {
-        // Get rider ID from either rider_id or status.riderid
-        const riderId = delivery.rider_id || delivery.status?.riderid;
-        const rider = riderId ? ridersMap.get(riderId) : null;
+    const transformedDeliveries = deliveries.map((delivery: DeliveryType) => {
+      // Get rider ID from either rider_id or status.riderid
+      const riderId = delivery.rider_id || delivery.status?.riderid;
+      const rider = riderId ? ridersMap.get(riderId) : null;
 
-        if (riderId && !rider) {
-          console.log("Missing rider for ID:", riderId);
-        }
-
-        return {
-          ...delivery,
-          user: usersMap.get(delivery.user_id),
-          rider: rider || null,
-          status: {
-            ...delivery.status,
-            current: delivery.status?.current?.toLowerCase() || "pending",
-          },
-        };
+      if (riderId && !rider) {
+        console.log("Missing rider for ID:", riderId);
       }
-    );
+
+      return {
+        ...delivery,
+        user: usersMap.get(delivery.user_id),
+        rider: rider || null,
+        status: {
+          ...delivery.status,
+          current: delivery.status?.current?.toLowerCase() || "pending",
+        },
+      };
+    });
 
     // Return empty list if no deliveries
     if (transformedDeliveries.length === 0) {
