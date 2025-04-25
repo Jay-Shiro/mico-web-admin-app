@@ -68,7 +68,7 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedRider, setSelectedRider] = useState<string>("");
   const [selectedType, setSelectedType] = useState<
-    "" | "completed" | "pending"
+    "" | "pending" | "paid" | "N/A"
   >("");
   const [dateRange, setDateRange] = useState<DateRange>({
     startDate: null,
@@ -91,7 +91,7 @@ export default function TransactionsPage() {
           { name: "user.lastname", weight: 1.5 },
           { name: "rider.firstname", weight: 1.5 },
           { name: "rider.lastname", weight: 1.5 },
-          { name: "status.current", weight: 1 },
+          { name: "transaction_info.payment_status", weight: 1 },
           { name: "price", weight: 1 },
           {
             name: "transaction_info.payment_date",
@@ -137,11 +137,14 @@ export default function TransactionsPage() {
         (!startDate || transactionDate >= new Date(startDate)) &&
         (!endDate || transactionDate <= new Date(endDate));
 
-      // Status filter handling
+      // Status filter handling - handle missing payment_status with "N/A"
+      const paymentStatus =
+        t.transaction_info?.payment_status?.toLowerCase() || "N/A";
       const statusFilter =
         !selectedType ||
-        t.transaction_info?.payment_status?.toLowerCase() ===
-          selectedType.toLowerCase();
+        (selectedType === "N/A"
+          ? !["pending", "paid"].includes(paymentStatus)
+          : paymentStatus === selectedType.toLowerCase());
 
       // Rider filter handling
       const riderFilter = !selectedRider || t.rider?._id === selectedRider;
@@ -176,12 +179,13 @@ export default function TransactionsPage() {
 
   // Summary metrics - based on delivery status
   const total = filtered.length;
-  const completed = filtered.filter(
-    (t) => t.transaction_info?.payment_status === "completed"
+  const paid = filtered.filter(
+    (t) => t.transaction_info?.payment_status === "paid"
   ).length;
   const pending = filtered.filter(
     (t) => t.transaction_info?.payment_status === "pending"
   ).length;
+  const naCount = total - paid - pending;
 
   // Chart data: daily volume
   const chartData = useMemo(() => {
@@ -258,7 +262,7 @@ export default function TransactionsPage() {
               .reduce((sum, t) => sum + (t.price || 0), 0)
               .toFixed(2),
           },
-          { label: "Completed", value: completed },
+          { label: "Paid", value: paid },
           { label: "Pending", value: pending },
         ].map((c, i) => (
           <motion.div
@@ -340,7 +344,7 @@ export default function TransactionsPage() {
                         pr-8 transition-all"
           value={selectedType}
           onChange={(e) => {
-            setSelectedType(e.target.value as "" | "completed" | "pending");
+            setSelectedType(e.target.value as "" | "pending" | "paid" | "N/A");
             setPage(1);
           }}
           initial={{ opacity: 0, x: -20 }}
@@ -348,8 +352,9 @@ export default function TransactionsPage() {
           transition={{ delay: 0.5 }}
         >
           <option value="">All Status</option>
-          <option value="completed">Completed</option>
+          <option value="paid">Paid</option>
           <option value="pending">Pending</option>
+          <option value="N/A">N/A</option>
         </motion.select>
 
         <motion.div
@@ -448,7 +453,7 @@ export default function TransactionsPage() {
                     ₦{(delivery.price ?? 0).toFixed(2)}
                   </td>
                   <td className="px-4 py-2 text-xs capitalize">
-                    {delivery.transaction_info?.payment_status}
+                    {delivery.transaction_info?.payment_status || "N/A"}
                   </td>
                   <td className="px-4 py-2 text-xs">
                     {delivery.rider

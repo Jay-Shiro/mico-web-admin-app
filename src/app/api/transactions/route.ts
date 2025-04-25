@@ -2,23 +2,18 @@ import { NextResponse } from "next/server";
 import { DeliveryType } from "@/app/(dashboard)/list/tracking/deliveryType";
 import { User } from "@/types/userType";
 import { Rider } from "@/app/(dashboard)/list/riders/riderType";
-import { fetchWithCache } from "@/utils/fetchWithCache";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 export async function GET() {
   try {
-    // Increase cache TTLs to reduce fetch frequency
-    const DELIVERIES_TTL = 5 * 60 * 1000; // 5 minutes (increased from 1 minute)
-    const USERS_TTL = 15 * 60 * 1000; // 15 minutes (increased from 5 minutes)
-    const RIDERS_TTL = 15 * 60 * 1000; // 15 minutes (increased from 5 minutes)
-
     // Common fetch options
-    const fetchOptions = {
+    const fetchOptions: RequestInit = {
       headers: {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache",
       },
+      cache: "no-store" as RequestCache,
     };
 
     // Fetch data with improved error handling
@@ -28,10 +23,16 @@ export async function GET() {
 
     try {
       // Only fetch deliveries first as they're most essential
-      deliveriesData = await fetchWithCache(`${BASE_URL}/deliveries`, {
-        ...fetchOptions,
-        cacheTTL: DELIVERIES_TTL,
-      });
+      const deliveriesResponse = await fetch(
+        `${BASE_URL}/deliveries`,
+        fetchOptions
+      );
+      if (!deliveriesResponse.ok) {
+        throw new Error(
+          `API request failed: ${deliveriesResponse.status} ${deliveriesResponse.statusText}`
+        );
+      }
+      deliveriesData = await deliveriesResponse.json();
 
       // If we have no deliveries, there's no need to fetch users or riders
       if (deliveriesData.deliveries && deliveriesData.deliveries.length > 0) {
@@ -46,23 +47,22 @@ export async function GET() {
 
         // Only if we have user/rider IDs, fetch their data
         if (userIds.size > 0 || riderIds.size > 0) {
-          [usersData, ridersData] = await Promise.all([
-            fetchWithCache(`${BASE_URL}/users`, {
-              ...fetchOptions,
-              cacheTTL: USERS_TTL,
-            }),
-            fetchWithCache(`${BASE_URL}/riders`, {
-              ...fetchOptions,
-              cacheTTL: RIDERS_TTL,
-            }),
+          const [usersResponse, ridersResponse] = await Promise.all([
+            fetch(`${BASE_URL}/users`, fetchOptions),
+            fetch(`${BASE_URL}/riders`, fetchOptions),
           ]);
+
+          if (usersResponse.ok) {
+            usersData = await usersResponse.json();
+          }
+
+          if (ridersResponse.ok) {
+            ridersData = await ridersResponse.json();
+          }
         }
       }
     } catch (error) {
-      console.warn(
-        "Error fetching some data, using cached/partial data:",
-        error
-      );
+      console.warn("Error fetching some data, using partial data:", error);
       // Continue with whatever data we have
     }
 

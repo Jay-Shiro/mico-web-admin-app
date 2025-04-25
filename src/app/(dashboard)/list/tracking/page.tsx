@@ -116,6 +116,9 @@ const DeliveriesListPage = () => {
     const pending = filteredDeliveries.filter(
       (d) => d.status.current.toLowerCase() === "pending"
     ).length;
+    const ongoing = filteredDeliveries.filter(
+      (d) => d.status.current.toLowerCase() === "ongoing"
+    ).length;
     const bikes = filteredDeliveries.filter(
       (d) => d.vehicletype.toLowerCase() === "bike"
     ).length;
@@ -123,7 +126,7 @@ const DeliveriesListPage = () => {
       (d) => d.vehicletype.toLowerCase() === "car"
     ).length;
 
-    return { total, completed, inProgress, pending, bikes, cars };
+    return { total, completed, inProgress, pending, ongoing, bikes, cars };
   }, [filteredDeliveries]);
 
   const applyFilters = useCallback(() => {
@@ -203,9 +206,11 @@ const DeliveriesListPage = () => {
     const checkTrackableDeliveries = async () => {
       const trackable = new Set<string>();
 
-      // Only check deliveries that are "inprogress"
+      // Only check deliveries that are "inprogress" or "ongoing"
       const inProgressDeliveries = filteredDeliveries.filter(
-        (delivery) => delivery.status.current.toLowerCase() === "inprogress"
+        (delivery) =>
+          delivery.status.current.toLowerCase() === "inprogress" ||
+          delivery.status.current.toLowerCase() === "ongoing"
       );
 
       // Check each in-progress delivery in parallel
@@ -306,6 +311,7 @@ const DeliveriesListPage = () => {
     const statusData = [
       { name: "Completed", value: statusCounts.completed || 0 },
       { name: "In Progress", value: statusCounts.inprogress || 0 },
+      { name: "Ongoing", value: statusCounts.ongoing || 0 },
       { name: "Pending", value: statusCounts.pending || 0 },
     ];
 
@@ -408,8 +414,43 @@ const DeliveriesListPage = () => {
             </div>
           </div>
 
+          {/* Ongoing */}
+          <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-orange-500 hover:shadow-lg transition-shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500 text-sm font-medium">Ongoing</p>
+                <h2 className="text-3xl font-bold text-gray-800">
+                  {metrics.ongoing}
+                </h2>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-lg">
+                <Truck className="h-7 w-7 text-orange-500" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div
+                  className="bg-orange-500 h-2.5 rounded-full animate-pulse"
+                  style={{
+                    width: `${Math.max(
+                      10,
+                      (metrics.ongoing / Math.max(metrics.total, 1)) * 100
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+              <div className="flex justify-between items-center text-sm mt-2">
+                <div className="flex items-center"></div>
+                <span className="text-orange-600 font-medium flex items-center">
+                  <span className="w-2 h-2 bg-orange-500 rounded-full mr-1.5 animate-pulse"></span>
+                  Active
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* In Progress */}
-          <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-yellow-500 hover:shadow-lg transition-shadow">
+          <div className="bg-white p-5 rounded-xl shadow-md border-l-4 border-blue-400 hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm font-medium">In Progress</p>
@@ -569,6 +610,7 @@ const DeliveriesListPage = () => {
                       <option value="all">All Statuses</option>
                       <option value="completed">Completed</option>
                       <option value="inprogress">In Progress</option>
+                      <option value="ongoing">Ongoing</option>
                       <option value="pending">Pending</option>
                     </select>
                   </div>

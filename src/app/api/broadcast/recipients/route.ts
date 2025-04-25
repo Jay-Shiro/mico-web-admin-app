@@ -1,33 +1,30 @@
 import { NextResponse } from "next/server";
-import { fetchWithCache } from "@/utils/fetchWithCache";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 export async function GET() {
   try {
-    // Cache TTLs - use longer caches to reduce API calls
-    const USERS_TTL = 15 * 60 * 1000; // 15 minutes
-    const RIDERS_TTL = 15 * 60 * 1000; // 15 minutes
-
     // Common fetch options
     const fetchOptions = {
       headers: {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache",
       },
+      cache: "no-store" as RequestCache,
     };
 
-    // Fetch users and riders data in parallel using cache
-    const [usersData, ridersData] = await Promise.all([
-      fetchWithCache(`${BASE_URL}/users`, {
-        ...fetchOptions,
-        cacheTTL: USERS_TTL,
-      }),
-      fetchWithCache(`${BASE_URL}/riders`, {
-        ...fetchOptions,
-        cacheTTL: RIDERS_TTL,
-      }),
+    // Fetch users and riders data in parallel
+    const [usersResponse, ridersResponse] = await Promise.all([
+      fetch(`${BASE_URL}/users`, fetchOptions),
+      fetch(`${BASE_URL}/riders`, fetchOptions),
     ]);
+
+    if (!usersResponse.ok || !ridersResponse.ok) {
+      throw new Error("Failed to fetch users or riders data");
+    }
+
+    const usersData = await usersResponse.json();
+    const ridersData = await ridersResponse.json();
 
     // Transform users data to include just what we need
     const users = (usersData.users || []).map((user: any) => ({

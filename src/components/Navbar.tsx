@@ -4,13 +4,13 @@ import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { useNotifications } from "@/hooks/useNotifications";
+// import { useNotifications } from "@/hooks/useNotifications";
 
 const Navbar = () => {
   const { data: session } = useSession();
   const userRole =
     (session?.user?.role as "admin" | "manager" | "support") || "support";
-  const { unreadCount } = useNotifications(userRole);
+  // const { unreadCount } = useNotifications(userRole);
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -28,11 +28,11 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    // Update document title when unread count changes
-    document.title =
-      unreadCount > 0 ? `(${unreadCount}) Mico Admin` : "Mico Admin";
-  }, [unreadCount]);
+  // useEffect(() => {
+  // Update document title when unread count changes
+  // document.title =
+  // unreadCount > 0 ? `(${unreadCount}) Mico Admin` : "Mico Admin";
+  // }, [unreadCount]);
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: "/login" });
@@ -57,7 +57,7 @@ const Navbar = () => {
         <div className="bg-white rounded-full w-7 h-7 flex items-center justify-center cursor-pointer relative">
           <Link href="/notifications">
             {" "}
-            <Image
+            {/* <Image
               src="/announcement.png"
               alt=""
               width={20}
@@ -67,8 +67,8 @@ const Navbar = () => {
             {unreadCount > 0 && (
               <div className="absolute -top-3 -right-3 w-5 h-5 flex items-center justify-center bg-[#001f3e] text-white rounded-full text-xs transition-all duration-300 ease-in-out animate-bounce">
                 {unreadCount > 99 ? "99+" : unreadCount}
-              </div>
-            )}
+              </div> */}
+            {/* )} */}
           </Link>
         </div>
         {session?.user && (

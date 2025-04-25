@@ -2,45 +2,57 @@ import { NextResponse } from "next/server";
 import { DeliveryType } from "@/app/(dashboard)/list/tracking/deliveryType";
 import { User } from "@/types/userType";
 import { Rider } from "@/app/(dashboard)/list/riders/riderType";
-import { fetchWithCache } from "@/utils/fetchWithCache";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 export async function GET() {
   try {
-    // Cache TTLs
-    const DELIVERIES_TTL = 60 * 1000; // 1 minute
-    const USERS_TTL = 5 * 60 * 1000; // 5 minutes
-    const RIDERS_TTL = 5 * 60 * 1000; // 5 minutes
-
     // Common fetch options
-    const fetchOptions = {
+    const fetchOptions: RequestInit = {
       headers: {
         "Content-Type": "application/json",
         "Cache-Control": "no-cache",
       },
+      cache: "no-store",
     };
 
-    // Fetch all required data in parallel with caching
+    // Fetch all required data in parallel
     let deliveriesData;
     let usersData;
     let ridersData;
 
     try {
-      [deliveriesData, usersData, ridersData] = await Promise.all([
-        fetchWithCache(`${BASE_URL}/deliveries`, {
-          ...fetchOptions,
-          cacheTTL: DELIVERIES_TTL,
-        }),
-        fetchWithCache(`${BASE_URL}/users`, {
-          ...fetchOptions,
-          cacheTTL: USERS_TTL,
-        }),
-        fetchWithCache(`${BASE_URL}/riders`, {
-          ...fetchOptions,
-          cacheTTL: RIDERS_TTL,
-        }),
-      ]);
+      const [deliveriesResponse, usersResponse, ridersResponse] =
+        await Promise.all([
+          fetch(`${BASE_URL}/deliveries`, fetchOptions),
+          fetch(`${BASE_URL}/users`, fetchOptions),
+          fetch(`${BASE_URL}/riders`, fetchOptions),
+        ]);
+
+      // Check responses and parse JSON
+      if (!deliveriesResponse.ok) {
+        if (deliveriesResponse.status === 404) {
+          deliveriesData = { deliveries: [] };
+        } else {
+          throw new Error(
+            `API request failed: ${deliveriesResponse.status} ${deliveriesResponse.statusText}`
+          );
+        }
+      } else {
+        deliveriesData = await deliveriesResponse.json();
+      }
+
+      if (usersResponse.ok) {
+        usersData = await usersResponse.json();
+      } else {
+        usersData = { users: [] };
+      }
+
+      if (ridersResponse.ok) {
+        ridersData = await ridersResponse.json();
+      } else {
+        ridersData = { riders: [] };
+      }
     } catch (error) {
       // Handle 404 for deliveries specially
       if (
@@ -50,24 +62,30 @@ export async function GET() {
         deliveriesData = { deliveries: [] };
 
         // Still need users and riders data
-        [usersData, ridersData] = await Promise.all([
-          fetchWithCache(`${BASE_URL}/users`, {
-            ...fetchOptions,
-            cacheTTL: USERS_TTL,
-          }),
-          fetchWithCache(`${BASE_URL}/riders`, {
-            ...fetchOptions,
-            cacheTTL: RIDERS_TTL,
-          }),
+        const [usersResponse, ridersResponse] = await Promise.all([
+          fetch(`${BASE_URL}/users`, fetchOptions),
+          fetch(`${BASE_URL}/riders`, fetchOptions),
         ]);
+
+        if (usersResponse.ok) {
+          usersData = await usersResponse.json();
+        } else {
+          usersData = { users: [] };
+        }
+
+        if (ridersResponse.ok) {
+          ridersData = await ridersResponse.json();
+        } else {
+          ridersData = { riders: [] };
+        }
       } else {
         throw error;
       }
     }
 
     const { deliveries = [] } = deliveriesData;
-    const { users } = usersData;
-    const { riders } = ridersData;
+    const { users = [] } = usersData;
+    const { riders = [] } = ridersData;
 
     // Create lookup maps for quick access
     const usersMap = new Map(users.map((user: User) => [user._id, user]));

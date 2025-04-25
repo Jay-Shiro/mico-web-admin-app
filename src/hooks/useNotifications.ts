@@ -8,7 +8,7 @@ import {
 
 const STORAGE_KEY = "admin_notifications";
 const HISTORY_KEY = "notifications_history"; // New key for tracking all notifications
-const MONITORING_INTERVAL = 60000; // 1 minute
+const MONITORING_INTERVAL = 160000; // 1 minute
 
 interface DeliveryData {
   _id: string;
