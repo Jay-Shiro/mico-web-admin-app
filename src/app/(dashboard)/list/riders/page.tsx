@@ -435,9 +435,12 @@ const RidersListPage = () => {
                   {/* RIDER INFO */}
                   <span className="text-xs sm:text-sm md:text-base font-medium text-center">
                     {rider.firstname} {rider.lastname}
-                    <span className="inline-flex ml-3 items-center justify-center w-4 h-4 bg-color2 text-white text-[10px] font-bold rounded-full">
-                      B
-                    </span>
+                    {rider.branding &&
+                      rider.branding.toLowerCase() === "yes" && (
+                        <span className="inline-flex ml-3 items-center justify-center w-4 h-4 bg-color2 text-white text-[10px] font-bold rounded-full">
+                          B
+                        </span>
+                      )}
                   </span>
 
                   <span className="text-xs sm:text-sm md:text-base text-center">

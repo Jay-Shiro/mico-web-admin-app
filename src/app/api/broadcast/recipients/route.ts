@@ -48,6 +48,7 @@ export async function GET() {
       email: rider.email,
       phone: rider.phone || "",
       status: rider.status || "active",
+      branding: rider.branding || "no",
       dateJoined: rider.date_joined || "",
       type: "rider",
       vehicle: rider.vehicle_type || "",

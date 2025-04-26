@@ -334,7 +334,16 @@ export default function RecipientSelector({
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium truncate">
-                                {item.name}
+                                {item.name}{" "}
+                                {item.branding &&
+                                  item.branding.toLowerCase() === "yes" && (
+                                    <span
+                                      className="inline-flex ml-3 items-center justify-center w-4 h-4 bg-color2 text-white text-[10px] font-bold rounded-full"
+                                      title="Accepts branding"
+                                    >
+                                      B
+                                    </span>
+                                  )}
                               </p>
                               <p className="text-sm text-gray-500 truncate">
                                 {item.email}
