@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState } from "react";
 import { DeliveryType } from "@/app/(dashboard)/list/tracking/deliveryType";
-import { FaCreditCard, FaMoneyBill } from "react-icons/fa";
+import { FaCreditCard, FaMoneyBill, FaCheckCircle } from "react-icons/fa";
 import { exportTransactionToCSV } from "@/lib/exportCSV";
 
 interface DetailsModalProps {
@@ -13,6 +13,73 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
   transaction,
   onClose,
 }) => {
+  // Add states for status update
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updateSuccess, setUpdateSuccess] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string>(
+    transaction.transaction_info?.payment_status || "pending"
+  );
+
+  // Function to update transaction status
+  const updateTransactionStatus = async (newStatus: string) => {
+    if (newStatus === paymentStatus) return;
+
+    setIsUpdating(true);
+    setUpdateError(null);
+    setUpdateSuccess(null);
+
+    try {
+      const response = await fetch(
+        `/api/deliveries/${transaction._id}/transaction`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            payment_status: newStatus,
+          }),
+        }
+      );
+
+      const responseData = await response.json();
+
+      if (!response.ok && !responseData.warning) {
+        throw new Error(
+          responseData.error ||
+            `Failed to update payment status (${response.status})`
+        );
+      }
+
+      // Update local state on success
+      setPaymentStatus(newStatus);
+
+      // Update the transaction object as well
+      if (transaction.transaction_info) {
+        transaction.transaction_info.payment_status = newStatus;
+      }
+
+      // Show appropriate success message based on response
+      if (responseData.warning) {
+        setUpdateSuccess(`Status updated locally. ${responseData.warning}`);
+      } else {
+        setUpdateSuccess(`Payment status successfully updated to ${newStatus}`);
+      }
+
+      // Auto-dismiss success message after 5 seconds
+      setTimeout(() => setUpdateSuccess(null), 5000);
+    } catch (error) {
+      setUpdateError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred when updating the payment status"
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
     <motion.div
       className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center p-4 z-50"
@@ -36,14 +103,14 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
           </div>
           <div
             className={`px-3 py-1 rounded-full text-sm font-medium ${
-              transaction.transaction_info?.payment_status === "completed"
+              paymentStatus === "paid"
                 ? "bg-green-100 text-green-800"
-                : transaction.transaction_info?.payment_status === "pending"
+                : paymentStatus === "pending"
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-gray-100 text-gray-800"
             }`}
           >
-            Payment Status: {transaction.transaction_info?.payment_status}
+            Payment Status: {paymentStatus}
           </div>
         </div>
 
@@ -67,6 +134,78 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
               <p className="text-lg font-semibold text-color1">
                 ₦{transaction.price?.toFixed(2)}
               </p>
+            </div>
+          </div>
+
+          {/* Payment Status Update */}
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h3 className="font-medium text-gray-800 mb-3">
+              Update Payment Status
+            </h3>
+
+            {/* Success message */}
+            {updateSuccess && (
+              <div className="mb-3 text-sm text-green-600 p-2 bg-green-50 rounded flex items-center">
+                <FaCheckCircle className="mr-2" />
+                {updateSuccess}
+              </div>
+            )}
+
+            {/* Error message */}
+            {updateError && (
+              <div className="mb-3 text-sm text-red-500 p-2 bg-red-50 rounded">
+                {updateError}
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => updateTransactionStatus("pending")}
+                disabled={isUpdating || paymentStatus === "pending"}
+                className={`px-4 py-2 rounded-md ${
+                  paymentStatus === "pending"
+                    ? "bg-yellow-100 text-yellow-800 border-2 border-yellow-300"
+                    : "bg-gray-100 text-gray-800 hover:bg-yellow-50"
+                } disabled:opacity-50`}
+              >
+                Pending
+              </button>
+              <button
+                onClick={() => updateTransactionStatus("paid")}
+                disabled={isUpdating || paymentStatus === "paid"}
+                className={`px-4 py-2 rounded-md ${
+                  paymentStatus === "paid"
+                    ? "bg-green-100 text-green-800 border-2 border-green-300"
+                    : "bg-gray-100 text-gray-800 hover:bg-green-50"
+                } disabled:opacity-50`}
+              >
+                Paid
+              </button>
+              {isUpdating && (
+                <span className="text-sm text-gray-500 flex items-center">
+                  <svg
+                    className="animate-spin h-4 w-4 mr-2 text-gray-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Updating...
+                </span>
+              )}
             </div>
           </div>
 

@@ -241,6 +241,12 @@ export default function TransactionsPage() {
     );
   }
 
+  // Add a function to refresh transactions after status update
+  const handleTransactionUpdate = async () => {
+    await fetchTransactions();
+    setSelectedTransaction(null);
+  };
+
   return (
     <div className="p-6 space-y-6 bg-gray-50">
       {/* Header */}
@@ -486,7 +492,7 @@ export default function TransactionsPage() {
         {selectedTransaction && (
           <DetailsModal
             transaction={selectedTransaction}
-            onClose={() => setSelectedTransaction(null)}
+            onClose={() => handleTransactionUpdate()}
           />
         )}
       </AnimatePresence>
