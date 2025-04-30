@@ -420,6 +420,7 @@ export default function TransactionsPage() {
                 "Delivery ID",
                 "Date",
                 "Amount",
+                "Branding",
                 "Status",
                 "Rider",
                 "Customer",
@@ -457,6 +458,11 @@ export default function TransactionsPage() {
                   </td>
                   <td className="px-4 py-2 text-xs">
                     ₦{(delivery.price ?? 0).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-2 text-xs">
+                    {delivery.rider?.branding?.toLowerCase() === "yes"
+                      ? "20%"
+                      : "25%"}
                   </td>
                   <td className="px-4 py-2 text-xs capitalize">
                     {delivery.transaction_info?.payment_status || "N/A"}
