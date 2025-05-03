@@ -52,6 +52,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     if (!response.ok) {
+      console.log("Failed to delete riders:", response.statusText);
       throw new Error(`Failed to delete riders: ${response.statusText}`);
     }
 
