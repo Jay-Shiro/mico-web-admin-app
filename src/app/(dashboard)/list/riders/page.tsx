@@ -28,6 +28,7 @@ const RidersListPage = () => {
     "delete" | "activate" | null
   >(null);
   const [error, setError] = useState<string | null>(null);
+  const [onlineRidersCount, setOnlineRidersCount] = useState<number>(0);
 
   let text;
 
@@ -53,8 +54,29 @@ const RidersListPage = () => {
     }
   };
 
+  // fetch online riders count
+  const fetchOnlineRidersCount = async () => {
+    try {
+      const response = await fetch("/api/riders/online", { cache: "no-store" });
+      if (!response.ok) throw new Error("Failed to fetch online riders data");
+
+      const data = await response.json();
+      setOnlineRidersCount(data.count || 0);
+    } catch (error) {
+      console.error("Error fetching online riders count:", error);
+      setOnlineRidersCount(0);
+    }
+  };
+
   useEffect(() => {
     fetchRiders();
+    fetchOnlineRidersCount();
+
+    // Set up an interval to refresh the online count every 30 seconds
+    const intervalId = setInterval(fetchOnlineRidersCount, 30000);
+
+    // Clean up interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Checked Boxes effects management
@@ -366,6 +388,13 @@ const RidersListPage = () => {
                 </>
               )}
               <span className="text-color1/50">Total: {ridersData.length}</span>
+              <span className="flex items-center text-color1/50">
+                Online:{" "}
+                <span className="text-green-500 font-medium ml-1">
+                  {onlineRidersCount}
+                </span>
+                <span className="w-2 h-2 bg-green-500 rounded-full ml-1 animate-pulse"></span>
+              </span>
             </div>
           </div>
         )}
