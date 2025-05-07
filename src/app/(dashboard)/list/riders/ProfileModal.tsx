@@ -8,6 +8,7 @@ interface ProfileModalProps {
   onClose: () => void;
   onStatusToggle: (id: string, updatedStatus: string) => void;
   onRiderDeleted: any;
+  isOnline?: boolean; // Add isOnline prop
 }
 
 const formatDateJoined = (isoString: string): string => {
@@ -30,6 +31,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   onClose,
   onStatusToggle,
   onRiderDeleted,
+  isOnline = false, // Default to offline
 }) => {
   const [rider, setRider] = useState<any>(null);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -227,25 +229,41 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           <p className="text-center p-4">Rider not found...</p>
         ) : (
           <>
-            {/* STATUS TOGGLE */}
-            <div className="mt-4 flex items-center justify-between">
-              <p className="text-gray-700 font-medium">Status</p>
-              <div
-                className={`w-12 h-6 flex items-center bg-gray-300 rounded-full p-1 cursor-pointer transition-all ${
-                  isActive ? "bg-color2" : "bg-red-400"
-                } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
-                onClick={toggleStatus}
-              >
-                <motion.div
-                  className="w-5 h-5 bg-white rounded-full shadow-md"
-                  animate={{ x: isActive ? 24 : 0 }}
-                  transition={{ duration: 0.2 }}
-                />
+            {/* STATUS TOGGLES */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <p className="text-gray-700 font-medium mr-2">Online Status:</p>
+                <div className="flex items-center">
+                  <span
+                    className={`inline-block w-3 h-3 rounded-full mr-1 ${
+                      isOnline ? "bg-green-500" : "bg-gray-300"
+                    }`}
+                  ></span>
+                  <span className="text-sm">
+                    {isOnline ? "Online" : "Offline"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center">
+                <p className="text-gray-700 font-medium mr-2">Active:</p>
+                <div
+                  className={`w-12 h-6 flex items-center bg-gray-300 rounded-full p-1 cursor-pointer transition-all ${
+                    isActive ? "bg-color2" : "bg-red-400"
+                  } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
+                  onClick={toggleStatus}
+                >
+                  <motion.div
+                    className="w-5 h-5 bg-white rounded-full shadow-md"
+                    animate={{ x: isActive ? 24 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  />
+                </div>
               </div>
             </div>
 
             {/* PROFILE IMAGE */}
-            <div className="mt-12 justify-center flex">
+            <div className="mt-12 justify-center flex relative">
               <Image
                 src={
                   transformImageUrl(rider.facial_picture_url) ||
@@ -255,6 +273,12 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 width={100}
                 height={100}
                 className="rounded-full object-cover border-2 border-gray-300"
+              />
+              {/* Online status indicator dot */}
+              <span
+                className={`absolute top-0 right-8 inline-block w-4 h-4 rounded-full border-2 border-white ${
+                  isOnline ? "bg-green-500" : "bg-gray-300"
+                }`}
               />
             </div>
 

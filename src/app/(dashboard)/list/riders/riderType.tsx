@@ -18,6 +18,7 @@ export type Rider = {
   accountnumber: string;
   status: string;
   ratings: number;
+  is_online: boolean; // Add the is_online property
   file_ids: {
     nationalid?: string;
     utility_bill?: string;

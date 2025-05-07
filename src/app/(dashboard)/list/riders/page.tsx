@@ -419,7 +419,7 @@ const RidersListPage = () => {
                     </span>
                   )}
                   {/* PROFILE IMAGE */}
-                  <div className="flex justify-center">
+                  <div className="flex justify-center relative">
                     <Image
                       src={
                         transformImageUrl(rider.facial_picture_url) ||
@@ -430,10 +430,22 @@ const RidersListPage = () => {
                       width={40}
                       height={40}
                     />
+                    {/* Online status indicator dot */}
+                    <span
+                      className={`absolute top-0 right-0 inline-block w-3 h-3 rounded-full border-2 border-white ${
+                        rider.is_online ? "bg-green-500" : "bg-gray-300"
+                      }`}
+                    />
                   </div>
 
                   {/* RIDER INFO */}
-                  <span className="text-xs sm:text-sm md:text-base font-medium text-center">
+                  <span className="text-xs sm:text-sm md:text-base font-medium text-center flex items-center justify-center">
+                    {/* Online status indicator */}
+                    {rider.is_online && (
+                      <span className="inline-flex mr-1.5 items-center justify-center w-2.5 h-2.5 bg-green-500 rounded-full">
+                        {/* Empty span for the green dot */}
+                      </span>
+                    )}
                     {rider.firstname} {rider.lastname}
                     {rider.branding &&
                       rider.branding.toLowerCase() === "yes" && (
@@ -487,6 +499,7 @@ const RidersListPage = () => {
           onClose={() => setSelectedRider(null)}
           onStatusToggle={handleStatusToggle}
           onRiderDeleted={fetchRiders}
+          isOnline={selectedRider.is_online}
         />
       )}
       <div></div>
