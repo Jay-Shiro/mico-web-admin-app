@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState } from "react";
 import { DeliveryType } from "./deliveryType";
 import { exportDeliveryToCSV } from "@/lib/exportCSV";
 import { FaMotorcycle, FaCar } from "react-icons/fa";
@@ -44,6 +44,41 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
   delivery,
   onClose,
 }) => {
+  // Add states for delete functionality
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Handle the delete action
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const response = await fetch(`/api/deliveries/${delivery._id}/delete`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to delete delivery");
+      }
+
+      // Close the modal and optionally refresh the list
+      onClose();
+      // You may want to add a callback to refresh the delivery list
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error
+          ? error.message
+          : "An error occurred during deletion"
+      );
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
+  };
+
   if (!delivery) return null;
 
   const getPackageSizeBox = (size?: string) => {
@@ -272,10 +307,90 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
           >
             Close
           </button>
-          <button className="flex-1 bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors">
+          <button
+            className="flex-1 bg-red-500 text-white px-3 py-1.5 rounded-md hover:bg-red-600 transition-colors"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={isDeleting}
+          >
             Delete
           </button>
         </div>
+
+        {/* Delete error message */}
+        {deleteError && (
+          <div className="mt-4 p-3 bg-red-50 text-red-500 text-sm rounded-md">
+            {deleteError}
+          </div>
+        )}
+
+        {/* Delete confirmation dialog */}
+        {showDeleteConfirm && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center bg-black/50 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              className="bg-white rounded-lg p-6 max-w-sm mx-auto"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Confirm Delete
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this delivery? This action
+                cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-3">
+                <button
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <span className="flex items-center">
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Deleting...
+                    </span>
+                  ) : (
+                    "Delete"
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </motion.div>
     </motion.div>
   );
