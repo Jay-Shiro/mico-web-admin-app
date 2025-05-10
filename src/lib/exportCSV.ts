@@ -154,13 +154,16 @@ export const exportDeliveryToCSV = (delivery: DeliveryType) => {
     ["Transaction Type", delivery.transactiontype],
     ["Package Size", delivery.packagesize || "N/A"],
     ["Delivery Speed", delivery.deliveryspeed],
-    ["Status - Delivery", delivery.status.current],
-    ["Status - Order", delivery.status.orderstatus],
-    ["Rider ID", delivery.status.riderid || "N/A"],
-    ["Payment Status", delivery.status.transactioninfo.status],
-    ["Payment Method", delivery.status.transactioninfo.payment_method || "N/A"],
-    ["Payment ID", delivery.status.transactioninfo.payment_id || "N/A"],
-    ["Payment Date", delivery.status.transactioninfo.payment_date || "N/A"],
+    ["Status - Delivery", delivery.status?.current || "N/A"],
+    ["Status - Order", delivery.status?.orderstatus || "N/A"],
+    ["Rider ID", delivery.status?.riderid || "N/A"],
+    ["Payment Status", delivery.status?.transactioninfo?.status || "N/A"],
+    [
+      "Payment Method",
+      delivery.status?.transactioninfo?.payment_method || "N/A",
+    ],
+    ["Payment ID", delivery.status?.transactioninfo?.payment_id || "N/A"],
+    ["Payment Date", delivery.status?.transactioninfo?.payment_date || "N/A"],
     ["Last Updated", delivery.last_updated || "N/A"],
   ];
 
@@ -213,11 +216,11 @@ export const exportAllDeliveriesToCSV = (deliveries: DeliveryType[]) => {
     delivery.transactiontype,
     delivery.packagesize || "N/A",
     delivery.deliveryspeed,
-    delivery.status.current,
-    delivery.status.orderstatus,
-    delivery.status.riderid || "N/A",
-    delivery.status.transactioninfo.status,
-    delivery.status.transactioninfo.payment_method || "N/A",
+    delivery.status?.current || "N/A",
+    delivery.status?.orderstatus || "N/A",
+    delivery.status?.riderid || "N/A",
+    delivery.status?.transactioninfo?.status || "N/A",
+    delivery.status?.transactioninfo?.payment_method || "N/A",
     delivery.last_updated || "N/A",
   ]);
 
@@ -250,13 +253,13 @@ export const exportTransactionToCSV = (transaction: DeliveryType) => {
     [
       "Date",
       new Date(
-        transaction.transaction_info?.payment_date || ""
+        transaction.transaction_info?.payment_date || new Date()
       ).toLocaleString(),
     ],
     ["Amount", `₦${transaction.price.toFixed(2)}`],
     ["Payment Type", transaction.transactiontype],
-    ["Delivery Status", transaction.status.current],
-    ["Order Status", transaction.status.orderstatus],
+    ["Delivery Status", transaction.status?.current || "N/A"],
+    ["Order Status", transaction.status?.orderstatus || "N/A"],
     [
       "Rider",
       transaction.rider

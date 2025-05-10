@@ -16,24 +16,35 @@ export async function DELETE(
       );
     }
 
-    // Call the external API to delete the delivery
-    const response = await fetch(`${BASE_URL}/deliveries/delete`, {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-        "Cache-Control": "no-cache",
-      },
-      body: JSON.stringify({
-        execute_code: deliveryId,
-      }),
-    });
+    // Call the external API with the correct endpoint structure
+    // The API expects the delivery_id as a path parameter, not in the request body
+    const response = await fetch(
+      `${BASE_URL}/deliveries/${deliveryId}/delete`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache",
+        },
+        // No body needed since delivery_id is in the path
+      }
+    );
 
     if (!response.ok) {
       // Try to get detailed error information
       let errorMessage;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.detail || response.statusText;
+        errorMessage =
+          errorData.detail || errorData.message || response.statusText;
+
+        // Handle specific error cases
+        if (response.status === 422) {
+          errorMessage =
+            "This delivery cannot be deleted due to its current status.";
+        } else if (response.status === 404) {
+          errorMessage = "Delivery not found or already deleted.";
+        }
       } catch {
         errorMessage = `Failed to delete delivery (${response.status})`;
       }

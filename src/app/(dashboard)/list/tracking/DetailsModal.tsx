@@ -59,8 +59,10 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
         method: "DELETE",
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
+        // Get specific error message from the response
         throw new Error(data.error || "Failed to delete delivery");
       }
 
@@ -68,6 +70,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
       onClose();
       // You may want to add a callback to refresh the delivery list
     } catch (error) {
+      console.error("Delete error:", error);
       setDeleteError(
         error instanceof Error
           ? error.message
@@ -75,7 +78,8 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
       );
     } finally {
       setIsDeleting(false);
-      setShowDeleteConfirm(false);
+      // Don't close the confirmation dialog on error so user can see the error message
+      // Only close it on success (which happens via onClose())
     }
   };
 
@@ -145,7 +149,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
   const formatTransactionInfo = (delivery: DeliveryType) => {
     const paymentStatus =
       delivery.status?.transactioninfo?.status?.toLowerCase() || "pending";
-    const paymentMethod = delivery.transactiontype;
+    const paymentMethod = delivery.transactiontype || "unknown";
 
     const statusStyles: Record<string, string> = {
       paid: "bg-color2/50",
@@ -156,6 +160,7 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
     const typeLabels: Record<string, string> = {
       cash: "Cash",
       card: "Card",
+      unknown: "Unknown",
     };
 
     return {
@@ -286,7 +291,9 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
               <div className="flex items-center gap-2">
                 <span className={`w-3 h-3 rounded-full ${statusStyles}`} />
                 <span className="text-sm capitalize">
-                  {delivery.transaction_info?.payment_status}
+                  {delivery.transaction_info?.payment_status ||
+                    delivery.status?.transactioninfo?.status ||
+                    "pending"}
                 </span>
               </div>
             </p>
