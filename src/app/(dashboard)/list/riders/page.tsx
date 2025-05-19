@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CiExport } from "react-icons/ci";
 import { IoMdDoneAll } from "react-icons/io";
 import { MdDeleteForever, MdOutlineSelectAll } from "react-icons/md";
-import { Eye, AlertCircle } from "lucide-react";
+import { Eye, AlertCircle, RefreshCw } from "lucide-react"; // Import RefreshCw icon
 import { ProfileModal } from "./ProfileModal";
 import { Rider } from "./riderType";
 import { exportAllRidersToCSV } from "@/lib/exportCSV";
@@ -29,6 +29,8 @@ const RidersListPage = () => {
   >(null);
   const [error, setError] = useState<string | null>(null);
   const [onlineRidersCount, setOnlineRidersCount] = useState<number>(0);
+  const [onlineRiders, setOnlineRiders] = useState<Set<string>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   let text;
 
@@ -54,30 +56,47 @@ const RidersListPage = () => {
     }
   };
 
-  // fetch online riders count
-  const fetchOnlineRidersCount = async () => {
+  // Function to fetch online riders
+  const fetchOnlineRiders = useCallback(async () => {
     try {
-      const response = await fetch("/api/riders/online", { cache: "no-store" });
-      if (!response.ok) throw new Error("Failed to fetch online riders data");
+      const response = await fetch("/api/riders/online");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.riders && Array.isArray(data.riders)) {
+          // Create a set of online rider IDs with explicit string type
+          const onlineIds = new Set<string>(
+            data.riders.map((rider: any) => rider._id)
+          );
+          setOnlineRiders(onlineIds);
 
-      const data = await response.json();
-      setOnlineRidersCount(data.count || 0);
+          // Update the online riders count
+          setOnlineRidersCount(onlineIds.size);
+
+          // Update the is_online property of each rider in the filtered riders list
+          setFilteredRiders((currentRiders) =>
+            currentRiders.map((rider) => ({
+              ...rider,
+              is_online: onlineIds.has(rider._id),
+            }))
+          );
+        }
+      }
     } catch (error) {
-      console.error("Error fetching online riders count:", error);
-      setOnlineRidersCount(0);
+      console.error("Error fetching online riders:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchRiders();
-    fetchOnlineRidersCount();
+    // Remove the separate fetchOnlineRidersCount call and just call fetchOnlineRiders
+    fetchOnlineRiders();
 
-    // Set up an interval to refresh the online count every 30 seconds
-    const intervalId = setInterval(fetchOnlineRidersCount, 30000);
+    // Set up an interval to refresh both online status and count every 30 seconds
+    const intervalId = setInterval(fetchOnlineRiders, 30000);
 
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
+  }, [fetchOnlineRiders]);
 
   // Checked Boxes effects management
   useEffect(() => {
@@ -309,6 +328,18 @@ const RidersListPage = () => {
     return `https://deliveryapi-ten.vercel.app/files/${id}`;
   };
 
+  // Function to handle manual refresh
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+
+    setIsRefreshing(true);
+    try {
+      await Promise.all([fetchRiders(), fetchOnlineRiders()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <>
       {/*TOP*/}
@@ -367,6 +398,13 @@ const RidersListPage = () => {
                 </>
               ) : (
                 <>
+                  {/* Add refresh icon */}
+                  <RefreshCw
+                    className={`text-color1 bg-white font-extrabold text-xl rounded-md hover:bg-opacity-80 hover:text-color1/20 cursor-pointer ${
+                      isRefreshing ? "animate-spin" : ""
+                    }`}
+                    onClick={handleRefresh}
+                  />
                   <CiExport
                     className="text-color1 bg-white font-extrabold text-2xl rounded-md hover:bg-opacity-80 hover:text-color1/20"
                     onClick={() => exportAllRidersToCSV(ridersData)}
@@ -443,9 +481,7 @@ const RidersListPage = () => {
                       className="px-4 w-5 h-5  accent-color1 text-center border-gray-500 rounded-full"
                     />
                   ) : (
-                    <span className="text-xs sm:text-sm md:text-base font-medium text-center">
-                      {index + 1}
-                    </span>
+                    <span className="text-center">{index + 1}</span>
                   )}
                   {/* PROFILE IMAGE */}
                   <div className="flex justify-center relative">
@@ -469,12 +505,6 @@ const RidersListPage = () => {
 
                   {/* RIDER INFO */}
                   <span className="text-xs sm:text-sm md:text-base font-medium text-center flex items-center justify-center">
-                    {/* Online status indicator */}
-                    {rider.is_online && (
-                      <span className="inline-flex mr-1.5 items-center justify-center w-2.5 h-2.5 bg-green-500 rounded-full">
-                        {/* Empty span for the green dot */}
-                      </span>
-                    )}
                     {rider.firstname} {rider.lastname}
                     {rider.branding &&
                       rider.branding.toLowerCase() === "yes" && (

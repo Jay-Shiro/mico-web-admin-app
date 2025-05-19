@@ -20,11 +20,27 @@ export async function GET() {
     }
 
     const data = await response.json();
-    return NextResponse.json(data, { status: 200 });
+
+    // Ensure we have the correct format for riders array
+    const riders = Array.isArray(data.riders)
+      ? data.riders
+      : Array.isArray(data)
+      ? data
+      : [];
+
+    // Return both the count and the array of online riders
+    return NextResponse.json(
+      {
+        status: "success",
+        count: riders.length,
+        riders: riders,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error fetching online riders: ", error);
     return NextResponse.json(
-      { error: "Failed to fetch online riders data", count: 0 },
+      { error: "Failed to fetch online riders data", count: 0, riders: [] },
       { status: 500 }
     );
   }

@@ -274,7 +274,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 height={100}
                 className="rounded-full object-cover border-2 border-gray-300"
               />
-              {/* Online status indicator dot */}
+              {/* Online status indicator dot - keeping only this one */}
               <span
                 className={`absolute top-0 right-8 inline-block w-4 h-4 rounded-full border-2 border-white ${
                   isOnline ? "bg-green-500" : "bg-gray-300"
@@ -287,6 +287,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <h2 className="text-lg font-semibold">
                 {rider.firstname} {rider.lastname}
               </h2>
+              {/* Remove any duplicate online status indicators here */}
               <p className="text-gray-500">
                 {" "}
                 <strong>Gender:</strong> {rider.gender}
