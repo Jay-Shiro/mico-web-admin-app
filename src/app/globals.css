@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.react-calendar{
+    width: 100% !important;
+    border: none !important;
+    font-family: "Inter", sans-serif !important;
+}
+
+.react-calendar__navigation_label_labelText {
+    font-weight: 600 !important;
+}
+
+.react-calendar__tile--active {
+    background-color: #DBE64C !important;
+    color: #000 !important;
+}
+
+@keyframes pulse-slow {
+    0% {
+      transform: scale(1);
+      opacity: 0.1;
+    }
+    50% {
+      transform: scale(1.02);
+      opacity: 0.2;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 0.1;
+    }
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse-slow 10s infinite;
+  }
+  
