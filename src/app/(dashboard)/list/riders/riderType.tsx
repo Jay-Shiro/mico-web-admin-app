@@ -28,4 +28,5 @@ export type Rider = {
     riders_license?: string;
     drivers_license?: string;
   };
+  displayIndex?: number; // Added to track the original position
 };

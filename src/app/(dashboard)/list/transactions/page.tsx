@@ -461,7 +461,7 @@ export default function TransactionsPage() {
                   </td>
                   <td className="px-4 py-2 text-xs">
                     {delivery.rider?.branding?.toLowerCase() === "yes"
-                      ? "10%"
+                      ? "12%"
                       : "15%"}
                   </td>
                   <td className="px-4 py-2 text-xs capitalize">
