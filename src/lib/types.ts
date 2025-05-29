@@ -33,3 +33,10 @@ export type Parameter = {
   key: string;
   description: string;
 };
+
+export type RiderInfo = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+};

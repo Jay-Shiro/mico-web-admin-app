@@ -45,6 +45,12 @@ const menuItems = [
       },
       {
         icon: "/delivery.png",
+        label: "Archived",
+        href: "/list/archived",
+        visible: ["admin"],
+      },
+      {
+        icon: "/delivery.png",
         label: "Deliveries",
         href: "/list/deliveries",
         visible: ["account"],
