@@ -100,16 +100,23 @@ const ArchivedDeliveriesPage = () => {
     fetchArchivedDeliveries();
   }, []);
 
-  // Filter deliveries based on search input
-  const filteredDeliveries = archivedDeliveries.filter((delivery) => {
-    const searchTerm = searchInput.toLowerCase();
-    return (
-      delivery._id.toLowerCase().includes(searchTerm) ||
-      delivery.startpoint.toLowerCase().includes(searchTerm) ||
-      delivery.endpoint.toLowerCase().includes(searchTerm) ||
-      delivery.status?.deliverystatus?.toLowerCase().includes(searchTerm)
-    );
-  });
+  // Filter and sort deliveries based on search input
+  const filteredDeliveries = archivedDeliveries
+    .filter((delivery) => {
+      const searchTerm = searchInput.toLowerCase();
+      return (
+        delivery._id.toLowerCase().includes(searchTerm) ||
+        delivery.startpoint.toLowerCase().includes(searchTerm) ||
+        delivery.endpoint.toLowerCase().includes(searchTerm) ||
+        delivery.status?.deliverystatus?.toLowerCase().includes(searchTerm)
+      );
+    })
+    .sort((a, b) => {
+      // Sort by archived_at date in descending order (newest first)
+      const dateA = new Date(a.archived_at).getTime();
+      const dateB = new Date(b.archived_at).getTime();
+      return dateB - dateA;
+    });
 
   // Format date
   const formatDate = (dateString: string) => {
