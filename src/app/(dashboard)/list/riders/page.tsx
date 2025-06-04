@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CiExport } from "react-icons/ci";
 import { IoMdDoneAll } from "react-icons/io";
 import { MdDeleteForever, MdOutlineSelectAll } from "react-icons/md";
-import { Eye, AlertCircle, RefreshCw } from "lucide-react"; // Import RefreshCw icon
+import { Eye, AlertCircle, RefreshCw, Phone } from "lucide-react"; // Import RefreshCw and Phone icons
 import { ProfileModal } from "./ProfileModal";
 import { Rider } from "./riderType";
 import { exportAllRidersToCSV } from "@/lib/exportCSV";
@@ -518,9 +518,23 @@ const RidersListPage = () => {
                     {rider.gender}
                   </span>
 
-                  <span className="text-xs sm:text-sm md:text-base truncate text-center">
-                    {rider.email}
-                  </span>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-xs sm:text-sm md:text-base truncate text-center">
+                      {rider.email}
+                    </span>
+                    {rider.phone && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`tel:${rider.phone}`, "_self");
+                        }}
+                        className="p-1 hover:bg-blue-100 rounded-full transition-colors"
+                        title={`Call ${rider.firstname} ${rider.lastname}`}
+                      >
+                        <Phone className="w-4 h-4 text-blue-600" />
+                      </button>
+                    )}
+                  </div>
 
                   <span
                     className={`text-xs font-semibold rounded-full text-center px-3 py-1 w-full md:w-auto ${

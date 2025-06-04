@@ -97,6 +97,7 @@ export default function RecipientSelector({
         item.email,
         item.phone,
         item.status,
+        item.address,
         activeTab === "riders" ? item.vehicle || "" : "",
       ]
         .join(" ")
@@ -346,7 +347,7 @@ export default function RecipientSelector({
                                   )}
                               </p>
                               <p className="text-sm text-gray-500 truncate">
-                                {item.email}
+                                {item.email} <p>{item.address || "NaN"}</p>
                               </p>
                             </div>
                             <div className="flex items-center gap-2">

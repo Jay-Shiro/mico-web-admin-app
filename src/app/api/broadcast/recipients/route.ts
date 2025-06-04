@@ -51,6 +51,7 @@ export async function GET() {
       branding: rider.branding || "no",
       dateJoined: rider.date_joined || "",
       type: "rider",
+      address: rider.homeaddressdetails || "",
       vehicle: rider.vehicle_type || "",
     }));
 

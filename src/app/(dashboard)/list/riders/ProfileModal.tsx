@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { exportToCSV } from "@/lib/exportCSV";
+import { Phone } from "lucide-react";
 
 interface ProfileModalProps {
   riderId: string;
@@ -295,9 +296,23 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <p className="text-gray-500">
                 <strong>Email:</strong> {rider?.email || "N/A"}
               </p>
-              <p className="text-gray-500">
-                <strong>Phone:</strong> {rider.phone}
-              </p>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-gray-500">
+                  <strong>Phone:</strong> {rider.phone}
+                </p>
+                {rider.phone && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.open(`tel:${rider.phone}`, "_self");
+                    }}
+                    className="p-1 hover:bg-blue-100 rounded-full transition-colors"
+                    title={`Call ${rider.firstname} ${rider.lastname}`}
+                  >
+                    <Phone className="w-4 h-4 text-blue-600" />
+                  </button>
+                )}
+              </div>
               <p className="text-gray-500">
                 <strong>Date Joined:</strong>{" "}
                 {formatDateJoined(rider.date_joined)}
