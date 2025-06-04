@@ -347,8 +347,13 @@ export default function RecipientSelector({
                                   )}
                               </p>
                               <p className="text-sm text-gray-500 truncate">
-                                {item.email} <p>{item.address || "NaN"}</p>
+                                {item.email}
                               </p>
+                              {activeTab === "riders" && (
+                                <p className="text-sm text-gray-500 truncate">
+                                  {item.address || "Address not available"}
+                                </p>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               {item.phone && (
