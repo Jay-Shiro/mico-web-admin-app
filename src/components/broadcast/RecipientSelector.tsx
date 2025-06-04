@@ -350,7 +350,7 @@ export default function RecipientSelector({
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
-                              {activeTab === "customers" && item.phone && (
+                              {item.phone && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
