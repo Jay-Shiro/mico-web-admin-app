@@ -501,6 +501,19 @@ const RidersListPage = () => {
                         rider.is_online ? "bg-green-500" : "bg-gray-300"
                       }`}
                     />
+                    {/* Call icon for mobile - positioned at bottom right */}
+                    {rider.phone && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(`tel:${rider.phone}`, "_self");
+                        }}
+                        className="absolute -bottom-1 -right-1 md:hidden p-1 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors shadow-md"
+                        title={`Call ${rider.firstname} ${rider.lastname}`}
+                      >
+                        <Phone className="w-3 h-3 text-white" />
+                      </button>
+                    )}
                   </div>
 
                   {/* RIDER INFO */}
