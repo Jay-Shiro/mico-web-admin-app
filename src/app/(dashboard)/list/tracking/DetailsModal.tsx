@@ -259,13 +259,73 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
         </div>
 
         {/* User & Rider badge */}
-        <div className="bg-color1/10 px-4 py-3 rounded-lg text-center mb-8">
-          <p className="font-medium">
-            Belonging to: {delivery.user?.firstname} {delivery.user?.lastname}
-          </p>
-          <p className="font-medium opacity-60 mt-2">
-            Delivered by: {delivery.rider?.firstname} {delivery.rider?.lastname}
-          </p>
+        <div className="bg-color1/10 px-4 py-3 rounded-lg mb-8">
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-2">
+              <p className="font-medium">
+                Belonging to: {delivery.user?.firstname}{" "}
+                {delivery.user?.lastname}
+              </p>
+              {delivery.user?.phone && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`tel:${delivery.user?.phone}`, "_self");
+                  }}
+                  className="p-1 hover:bg-blue-100 rounded-full transition-colors"
+                  title={`Call ${delivery.user?.firstname} ${delivery.user?.lastname}`}
+                >
+                  <svg
+                    className="w-4 h-4 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2">
+              <p className="font-medium opacity-60">
+                Delivered by: {delivery.rider?.firstname}{" "}
+                {delivery.rider?.lastname}
+              </p>
+              {delivery.rider?.phone && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`tel:${delivery.rider?.phone}`, "_self");
+                  }}
+                  className="p-1 hover:bg-blue-100 rounded-full transition-colors"
+                  title={`Call ${delivery.rider?.firstname} ${delivery.rider?.lastname}`}
+                >
+                  <svg
+                    className="w-4 h-4 text-blue-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Transaction details */}

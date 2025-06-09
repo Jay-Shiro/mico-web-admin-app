@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { DeliveryType } from "./deliveryType";
 import { Loader } from "@googlemaps/js-api-loader";
 
@@ -89,7 +89,7 @@ const DeliveryMap = ({
     });
   }, []);
 
-  const focusDelivery = (delivery: DeliveryType, location: LocationData) => {
+  const focusDelivery = useCallback((delivery: DeliveryType, location: LocationData) => {
     if (!map) return;
 
     const position = { lat: location.latitude, lng: location.longitude };
@@ -107,7 +107,7 @@ const DeliveryMap = ({
     });
 
     setSelectedDeliveryId(delivery._id);
-  };
+  }, [map, activeInfoWindow, markers]);
 
   useEffect(() => {
     if (!map || !deliveries.length) return;
@@ -232,7 +232,7 @@ const DeliveryMap = ({
       clearInterval(intervalId);
       newMarkers.forEach((marker) => marker.setMap(null));
     };
-  }, [map, deliveries, selectedDeliveryId, trackingDeliveryId]);
+  }, [map, deliveries, selectedDeliveryId, trackingDeliveryId, activeInfoWindow, focusDelivery, markers, onDeliveryClick]);
 
   return (
     <div className="relative w-full h-[50vh] md:h-[400px] bg-gray-100 rounded-lg overflow-hidden">
