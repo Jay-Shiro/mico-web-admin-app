@@ -212,7 +212,9 @@ const ArchivedDeliveriesPage = () => {
                     <p className="text-sm text-gray-500">Customer</p>
                     <div className="flex items-center gap-2">
                       <User size={16} className="text-gray-400" />
-                      <p className="font-medium">{delivery.user?.name || "Unknown"}</p>
+                      <p className="font-medium">
+                        {delivery.user?.name || "Unknown"}
+                      </p>
                       {delivery.user?.phone && (
                         <button
                           onClick={(e) => {
