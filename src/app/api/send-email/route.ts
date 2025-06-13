@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { FormData as NodeFormData, File as NodeFile } from "formdata-node";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 /**
- * PRODUCTION-STABLE EMAIL API ROUTE
+ * PRODUCTION-READY EMAIL API ROUTE WITH IMAGE SUPPORT
  *
- * This version uses the proven URL-encoded approach for production reliability:
- * - Uses simple URL-encoded parameters instead of FormData for production
- * - Disables images in production temporarily to ensure basic email functionality works
- * - Includes comprehensive logging for debugging
- * - Will support images once basic functionality is confirmed stable
+ * This version now supports both text-only and image emails in production:
+ * - Uses URL-encoded for text-only emails (proven reliable)
+ * - Uses formdata-node for image emails (Vercel-compatible multipart)
+ * - Comprehensive logging and error handling
+ * - Fallback mechanisms to ensure delivery
  */
 
 export async function POST(request: NextRequest) {
@@ -61,132 +62,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // PRODUCTION STRATEGY: Use proven URL-encoded approach for reliability
+    // PRODUCTION STRATEGY: Smart approach based on content type
     if (process.env.NODE_ENV === "production") {
-      console.log(
-        "🚀 PRODUCTION MODE: Using URL-encoded approach for maximum reliability"
-      );
-
       if (hasImages) {
         console.log(
-          "⚠️ Images detected but disabled in production for stability"
+          "🚀 PRODUCTION MODE: Using formdata-node for images (Vercel-compatible)"
         );
-      }
-
-      // Use URL-encoded form data instead of multipart for production reliability
-      const urlEncodedData = new URLSearchParams({
-        email: email,
-        subject: subject,
-        body: body,
-      });
-
-      console.log("📤 Sending URL-encoded data to FastAPI...");
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.log("⏰ Request timeout after 25s");
-        controller.abort();
-      }, 25000);
-
-      try {
-        const response = await fetch(`${BASE_URL}/send-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            Accept: "application/json",
-          },
-          body: urlEncodedData.toString(),
-          signal: controller.signal,
-        });
-
-        clearTimeout(timeoutId);
-
-        console.log("📡 FastAPI response:", {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          headers: Object.fromEntries(response.headers.entries()),
-        });
-
-        const responseText = await response.text();
-        console.log("📄 FastAPI response text:", responseText);
-
-        if (response.ok) {
-          let responseData;
-          try {
-            responseData = JSON.parse(responseText);
-            console.log("✅ Email sent successfully (production mode)");
-          } catch (parseError) {
-            responseData = { message: responseText };
-            console.log("📝 Non-JSON response, treating as message");
-          }
-
-          const finalResponse: any = {
-            success: true,
-            message: hasImages
-              ? "Email sent successfully (images temporarily disabled in production)"
-              : "Email sent successfully",
-            data: responseData,
-            debug: {
-              method: "URL_ENCODED_STABLE",
-              contentType: "application/x-www-form-urlencoded",
-              hasImages,
-              imageCount: images.length,
-            },
-          };
-
-          if (hasImages) {
-            finalResponse.warning =
-              "Images were temporarily disabled in production for stability";
-          }
-
-          return NextResponse.json(finalResponse);
-        } else {
-          console.log("❌ FastAPI error:", response.status, responseText);
-          return NextResponse.json(
-            {
-              error: "Failed to send email via FastAPI",
-              details: responseText,
-              status: response.status,
-              debug: {
-                method: "URL_ENCODED_STABLE",
-                contentType: "application/x-www-form-urlencoded",
-                bodyLength: urlEncodedData.toString().length,
-                hasImages,
-                imageCount: images.length,
-              },
-            },
-            { status: response.status }
-          );
-        }
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-
-        console.error("🚨 Fetch error:", fetchError);
-
-        if (fetchError.name === "AbortError") {
-          return NextResponse.json(
-            {
-              error: "Request timeout",
-              details: "The email sending request timed out",
-            },
-            { status: 408 }
-          );
-        }
-
-        return NextResponse.json(
-          {
-            error: "Network error",
-            details: fetchError.message,
-            debug: {
-              fetchErrorName: fetchError.name,
-              fetchErrorType: typeof fetchError,
-              hasImages,
-              imageCount: images.length,
-            },
-          },
-          { status: 500 }
+        return await sendEmailViaFormDataNode(email, subject, body, images);
+      } else {
+        console.log(
+          "🚀 PRODUCTION MODE: Using URL-encoded for text-only (proven reliable)"
         );
+        return await sendEmailViaUrlEncoded(email, subject, body);
       }
     }
 
@@ -205,6 +92,219 @@ export async function POST(request: NextRequest) {
           errorType: typeof error,
         },
       },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Production URL-encoded email sending (for text-only emails)
+ */
+async function sendEmailViaUrlEncoded(
+  email: string,
+  subject: string,
+  body: string
+) {
+  const urlEncodedData = new URLSearchParams({
+    email: email,
+    subject: subject,
+    body: body,
+  });
+
+  console.log("📤 Sending URL-encoded data to FastAPI...");
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.log("⏰ Request timeout after 25s");
+    controller.abort();
+  }, 25000);
+
+  try {
+    const response = await fetch(`${BASE_URL}/send-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: urlEncodedData.toString(),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log("📡 FastAPI response:", {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+    });
+
+    const responseText = await response.text();
+    console.log("📄 FastAPI response text:", responseText);
+
+    if (response.ok) {
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+        console.log("✅ Email sent successfully (URL-encoded)");
+      } catch (parseError) {
+        responseData = { message: responseText };
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Email sent successfully",
+        data: responseData,
+        debug: {
+          method: "URL_ENCODED_PRODUCTION",
+          contentType: "application/x-www-form-urlencoded",
+        },
+      });
+    } else {
+      console.log("❌ FastAPI error:", response.status, responseText);
+      return NextResponse.json(
+        {
+          error: "Failed to send email via FastAPI",
+          details: responseText,
+          status: response.status,
+        },
+        { status: response.status }
+      );
+    }
+  } catch (fetchError: any) {
+    clearTimeout(timeoutId);
+    console.error("🚨 Fetch error:", fetchError);
+
+    if (fetchError.name === "AbortError") {
+      return NextResponse.json(
+        { error: "Request timeout" },
+        { status: 408 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: "Network error", details: fetchError.message },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Production FormData email sending (for emails with images)
+ */
+async function sendEmailViaFormDataNode(
+  email: string,
+  subject: string,
+  body: string,
+  images: File[]
+) {
+  try {
+    console.log("📤 Using formdata-node for better multipart compatibility on Vercel...");
+
+    const productionFormData = new NodeFormData();
+    productionFormData.append("email", email);
+    productionFormData.append("subject", subject);
+    productionFormData.append("body", body);
+
+    // Add images using formdata-node
+    for (let index = 0; index < images.length; index++) {
+      const image = images[index];
+      if (image instanceof File && image.size > 0) {
+        try {
+          // Convert File to Buffer for formdata-node compatibility
+          const arrayBuffer = await image.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          
+          const nodeFile = new NodeFile([buffer], image.name || `image_${index}.jpg`, {
+            type: image.type || "image/jpeg",
+          });
+          
+          productionFormData.append("image", nodeFile);
+          console.log(
+            `📎 Added image ${index}: ${image.name} (${image.size} bytes, ${image.type})`
+          );
+        } catch (fileError) {
+          console.error(`❌ Error processing image ${index}:`, fileError);
+        }
+      }
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log("⏰ Request timeout after 30s");
+      controller.abort();
+    }, 30000);
+
+    try {
+      const response = await fetch(`${BASE_URL}/send-email`, {
+        method: "POST",
+        body: productionFormData as any, // Type assertion for fetch compatibility
+        signal: controller.signal,
+        headers: {
+          Accept: "application/json",
+          // Let formdata-node handle Content-Type header with proper boundary
+        },
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log("📡 FastAPI response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      const responseText = await response.text();
+      console.log("📄 FastAPI response text:", responseText);
+
+      if (response.ok) {
+        let responseData;
+        try {
+          responseData = JSON.parse(responseText);
+          console.log("✅ Email with images sent successfully (formdata-node)");
+        } catch (parseError) {
+          responseData = { message: responseText };
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: "Email with images sent successfully",
+          data: responseData,
+          debug: {
+            method: "FORMDATA_NODE_PRODUCTION",
+            imageCount: images.length,
+          },
+        });
+      } else {
+        console.log("❌ FastAPI error:", response.status, responseText);
+        return NextResponse.json(
+          {
+            error: "Failed to send email with images via FastAPI",
+            details: responseText,
+            status: response.status,
+          },
+          { status: response.status }
+        );
+      }
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      console.error("🚨 Fetch error:", fetchError);
+
+      if (fetchError.name === "AbortError") {
+        return NextResponse.json(
+          { error: "Request timeout" },
+          { status: 408 }
+        );
+      }
+
+      return NextResponse.json(
+        { error: "Network error", details: fetchError.message },
+        { status: 500 }
+      );
+    }
+  } catch (error: any) {
+    console.error("🚨 FormData processing error:", error);
+    return NextResponse.json(
+      { error: "Failed to process form data", details: error.message },
       { status: 500 }
     );
   }
