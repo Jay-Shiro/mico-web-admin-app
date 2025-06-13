@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 type SendPanelProps = {
   emailContent: {
@@ -22,6 +23,7 @@ export default function SendPanel({
   selectedImage,
   selectedImages = [],
 }: SendPanelProps) {
+  const isMounted = useIsMounted();
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -677,19 +679,26 @@ export default function SendPanel({
               </motion.div>
             )}
 
-            {/* Confetti Animation */}
-            <motion.div
-              className="absolute inset-0 pointer-events-none"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{ duration: 2 }}
-            >
-              {Array.from({ length: 100 }).map((_, i) => (
+            {/* Confetti Animation */}          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 1, 0] }}
+            transition={{ duration: 2 }}
+          >
+            {Array.from({ length: 100 }).map((_, i) => {
+              // Use deterministic values based on index to prevent hydration mismatches
+              const leftPercent = (i * 7) % 100;
+              const topPercent = 10 + ((i * 13) % 30);
+              const scale = ((i % 5) + 1) * 0.4 + 0.5;
+              const duration = ((i % 3) + 1) * 0.5 + 1;
+              const delay = (i % 10) * 0.05;
+              
+              return (
                 <motion.div
                   key={i}
                   className="absolute w-2 h-2 rounded-full"
                   style={{
-                    left: `${Math.random() * 100}%`,
+                    left: `${leftPercent}%`,
                     backgroundColor:
                       i % 5 === 0
                         ? "#7EA852"
@@ -707,17 +716,18 @@ export default function SendPanel({
                     opacity: 1,
                   }}
                   animate={{
-                    top: `${10 + Math.random() * 30}%`,
-                    scale: Math.random() * 2 + 0.5,
+                    top: `${topPercent}%`,
+                    scale: scale,
                     opacity: [1, 0],
                   }}
                   transition={{
-                    duration: Math.random() * 2 + 1,
-                    delay: Math.random() * 0.5,
+                    duration: duration,
+                    delay: delay,
                   }}
                 />
-              ))}
-            </motion.div>
+              );
+            })}
+          </motion.div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl mb-8">
@@ -757,10 +767,10 @@ export default function SendPanel({
                 transition={{ delay: 0.6 }}
               >
                 <div className="text-3xl font-bold text-color1">
-                  {new Date().toLocaleTimeString([], {
+                  {isMounted ? new Date().toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
-                  })}
+                  }) : "--:--"}
                 </div>
                 <div className="text-sm text-gray-600">Sent At</div>
               </motion.div>
@@ -778,7 +788,11 @@ export default function SendPanel({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.location.reload();
+                  }
+                }}
               >
                 Create New Broadcast
               </motion.button>
@@ -810,7 +824,11 @@ export default function SendPanel({
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
-                  onClick={() => (window.location.href = "/admin")}
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      window.location.href = "/admin";
+                    }
+                  }}
                 >
                   Go Back Home
                 </motion.button>

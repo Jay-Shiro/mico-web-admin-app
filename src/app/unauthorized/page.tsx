@@ -2,14 +2,25 @@
 
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const Unauthorized = () => {
+  const router = useRouter();
+
   useEffect(() => {
     const timeout = setTimeout(() => {
-      window.location.href = "/";
+      if (typeof window !== 'undefined') {
+        router.push("/");
+      }
     }, 5000);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [router]);
+
+  const handleRedirect = () => {
+    if (typeof window !== 'undefined') {
+      router.push("/");
+    }
+  };
 
   return (
     <main className="relative min-h-screen bg-black flex flex-col items-center justify-center text-white px-6 font-sans text-center overflow-hidden">
@@ -56,7 +67,7 @@ const Unauthorized = () => {
 
         {/* Manual Redirect Option */}
         <button
-          onClick={() => (window.location.href = "/")}
+          onClick={handleRedirect}
           className="bg-color4 text-color1 px-6 py-3 rounded-lg font-semibold text-base sm:text-lg hover:bg-color4lite transition duration-300 shadow-md hover:shadow-lg"
         >
           Return Home Now

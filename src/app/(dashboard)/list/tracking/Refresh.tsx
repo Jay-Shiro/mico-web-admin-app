@@ -10,6 +10,12 @@ export const Refresh: React.FC<RefreshProps> = ({ onRefresh }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [touchStartY, setTouchStartY] = useState(0);
   const [pullDelta, setPullDelta] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted before using browser APIs
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleRefresh = useCallback(() => {
     if (isRefreshing) return;
@@ -28,6 +34,9 @@ export const Refresh: React.FC<RefreshProps> = ({ onRefresh }) => {
 
   const handleTouchMove = useCallback(
     (e: TouchEvent) => {
+      // Only proceed if mounted and window is available
+      if (!mounted || typeof window === 'undefined') return;
+      
       if (window.scrollY > 0) return;
 
       const touchY = e.touches[0].screenY;
@@ -41,7 +50,7 @@ export const Refresh: React.FC<RefreshProps> = ({ onRefresh }) => {
         }
       }
     },
-    [touchStartY, isRefreshing, handleRefresh]
+    [touchStartY, isRefreshing, handleRefresh, mounted]
   );
 
   const handleTouchEnd = useCallback(() => {
@@ -50,6 +59,9 @@ export const Refresh: React.FC<RefreshProps> = ({ onRefresh }) => {
   }, []);
 
   useEffect(() => {
+    // Only add event listeners if mounted and window is available
+    if (!mounted || typeof window === 'undefined') return;
+
     window.addEventListener("touchstart", handleTouchStart);
     window.addEventListener("touchmove", handleTouchMove);
     window.addEventListener("touchend", handleTouchEnd);
@@ -59,7 +71,7 @@ export const Refresh: React.FC<RefreshProps> = ({ onRefresh }) => {
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
     };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd, mounted]);
 
   return (
     <div className="flex flex-col items-center gap-2">

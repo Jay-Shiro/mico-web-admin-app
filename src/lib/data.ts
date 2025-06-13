@@ -991,148 +991,159 @@ export const announcementsData = [
   },
 ];
 
-// YOU SHOULD CHANGE THE DATES OF THE EVENTS TO THE CURRENT DATE TO SEE THE EVENTS ON THE CALENDAR
-export const calendarEvents = [
+// Calendar events using string dates to prevent hydration mismatches
+// These will be converted to Date objects on the client side
+export const calendarEventsData = [
   {
     title: "Math",
     allDay: false,
-    start: new Date(2024, 7, 12, 8, 0),
-    end: new Date(2024, 7, 12, 8, 45),
+    start: "2024-08-12T08:00:00",
+    end: "2024-08-12T08:45:00",
   },
   {
-    title: "English",
+    title: "English", 
     allDay: false,
-    start: new Date(2024, 7, 12, 9, 0),
-    end: new Date(2024, 7, 12, 9, 45),
+    start: "2024-08-12T09:00:00",
+    end: "2024-08-12T09:45:00",
   },
   {
     title: "Biology",
     allDay: false,
-    start: new Date(2024, 7, 12, 10, 0),
-    end: new Date(2024, 7, 12, 10, 45),
+    start: "2024-08-12T10:00:00",
+    end: "2024-08-12T10:45:00",
   },
   {
     title: "Physics",
     allDay: false,
-    start: new Date(2024, 7, 12, 11, 0),
-    end: new Date(2024, 7, 12, 11, 45),
+    start: "2024-08-12T11:00:00",
+    end: "2024-08-12T11:45:00",
   },
   {
     title: "Chemistry",
     allDay: false,
-    start: new Date(2024, 7, 12, 13, 0),
-    end: new Date(2024, 7, 12, 13, 45),
+    start: "2024-08-12T13:00:00",
+    end: "2024-08-12T13:45:00",
   },
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 12, 14, 0),
-    end: new Date(2024, 7, 12, 14, 45),
+    start: "2024-08-12T14:00:00",
+    end: "2024-08-12T14:45:00",
   },
   {
     title: "English",
     allDay: false,
-    start: new Date(2024, 7, 13, 9, 0),
-    end: new Date(2024, 7, 13, 9, 45),
+    start: "2024-08-13T09:00:00",
+    end: "2024-08-13T09:45:00",
   },
   {
     title: "Biology",
     allDay: false,
-    start: new Date(2024, 7, 13, 10, 0),
-    end: new Date(2024, 7, 13, 10, 45),
+    start: "2024-08-13T10:00:00",
+    end: "2024-08-13T10:45:00",
   },
   {
     title: "Physics",
     allDay: false,
-    start: new Date(2024, 7, 13, 11, 0),
-    end: new Date(2024, 7, 13, 11, 45),
+    start: "2024-08-13T11:00:00",
+    end: "2024-08-13T11:45:00",
   },
-
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 13, 14, 0),
-    end: new Date(2024, 7, 13, 14, 45),
+    start: "2024-08-13T14:00:00",
+    end: "2024-08-13T14:45:00",
   },
   {
     title: "Math",
     allDay: false,
-    start: new Date(2024, 7, 14, 8, 0),
-    end: new Date(2024, 7, 14, 8, 45),
+    start: "2024-08-14T08:00:00",
+    end: "2024-08-14T08:45:00",
   },
   {
     title: "Biology",
     allDay: false,
-    start: new Date(2024, 7, 14, 10, 0),
-    end: new Date(2024, 7, 14, 10, 45),
+    start: "2024-08-14T10:00:00",
+    end: "2024-08-14T10:45:00",
   },
-
   {
     title: "Chemistry",
     allDay: false,
-    start: new Date(2024, 7, 14, 13, 0),
-    end: new Date(2024, 7, 14, 13, 45),
+    start: "2024-08-14T13:00:00",
+    end: "2024-08-14T13:45:00",
   },
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 14, 14, 0),
-    end: new Date(2024, 7, 13, 14, 45),
+    start: "2024-08-14T14:00:00",
+    end: "2024-08-14T14:45:00",
   },
   {
     title: "English",
     allDay: false,
-    start: new Date(2024, 7, 15, 9, 0),
-    end: new Date(2024, 7, 15, 9, 45),
+    start: "2024-08-15T09:00:00",
+    end: "2024-08-15T09:45:00",
   },
   {
     title: "Biology",
     allDay: false,
-    start: new Date(2024, 7, 15, 10, 0),
-    end: new Date(2024, 7, 15, 10, 45),
+    start: "2024-08-15T10:00:00",
+    end: "2024-08-15T10:45:00",
   },
   {
     title: "Physics",
     allDay: false,
-    start: new Date(2024, 7, 15, 11, 0),
-    end: new Date(2024, 7, 15, 11, 45),
+    start: "2024-08-15T11:00:00",
+    end: "2024-08-15T11:45:00",
   },
-
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 15, 14, 0),
-    end: new Date(2024, 7, 15, 14, 45),
+    start: "2024-08-15T14:00:00",
+    end: "2024-08-15T14:45:00",
   },
   {
     title: "Math",
     allDay: false,
-    start: new Date(2024, 7, 16, 8, 0),
-    end: new Date(2024, 7, 16, 8, 45),
+    start: "2024-08-16T08:00:00",
+    end: "2024-08-16T08:45:00",
   },
   {
     title: "English",
     allDay: false,
-    start: new Date(2024, 7, 16, 9, 0),
-    end: new Date(2024, 7, 16, 9, 45),
+    start: "2024-08-16T09:00:00",
+    end: "2024-08-16T09:45:00",
   },
-
   {
     title: "Physics",
     allDay: false,
-    start: new Date(2024, 7, 16, 11, 0),
-    end: new Date(2024, 7, 16, 11, 45),
+    start: "2024-08-16T11:00:00",
+    end: "2024-08-16T11:45:00",
   },
   {
     title: "Chemistry",
     allDay: false,
-    start: new Date(2024, 7, 16, 13, 0),
-    end: new Date(2024, 7, 16, 13, 45),
+    start: "2024-08-16T13:00:00",
+    end: "2024-08-16T13:45:00",
   },
   {
     title: "History",
     allDay: false,
-    start: new Date(2024, 7, 16, 14, 0),
-    end: new Date(2024, 7, 16, 14, 45),
+    start: "2024-08-16T14:00:00",
+    end: "2024-08-16T14:45:00",
   },
 ];
+
+// Helper function to convert string dates to Date objects (client-side only)
+export const getCalendarEvents = () => {
+  if (typeof window === 'undefined') {
+    // Return empty array on server to prevent hydration mismatch
+    return [];
+  }
+  
+  return calendarEventsData.map(event => ({
+    ...event,
+    start: new Date(event.start),
+    end: new Date(event.end),
+  }));
+};

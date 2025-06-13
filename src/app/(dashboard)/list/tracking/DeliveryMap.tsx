@@ -53,7 +53,7 @@ const DeliveryMap = ({
           zoomControl: true,
           zoomControlOptions: {
             position:
-              window.innerWidth < 768
+              typeof window !== 'undefined' && window.innerWidth < 768
                 ? google.maps.ControlPosition.RIGHT_BOTTOM
                 : google.maps.ControlPosition.RIGHT_CENTER,
           },
@@ -74,17 +74,21 @@ const DeliveryMap = ({
 
         // Add resize listener to adjust control positions
         const resizeListener = () => {
-          map.setOptions({
-            zoomControlOptions: {
-              position:
-                window.innerWidth < 768
-                  ? google.maps.ControlPosition.RIGHT_BOTTOM
-                  : google.maps.ControlPosition.RIGHT_CENTER,
-            },
-          });
+          if (typeof window !== 'undefined') {
+            map.setOptions({
+              zoomControlOptions: {
+                position:
+                  window.innerWidth < 768
+                    ? google.maps.ControlPosition.RIGHT_BOTTOM
+                    : google.maps.ControlPosition.RIGHT_CENTER,
+              },
+            });
+          }
         };
-        window.addEventListener("resize", resizeListener);
-        return () => window.removeEventListener("resize", resizeListener);
+        if (typeof window !== 'undefined') {
+          window.addEventListener("resize", resizeListener);
+          return () => window.removeEventListener("resize", resizeListener);
+        }
       }
     });
   }, []);

@@ -1,8 +1,14 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 
 const Homepage = () => {
+  const router = useRouter();
+
+  const handleLogin = () => {
+    router.push("/login");
+  };
   return (
     <main className="min-h-screen bg-gradient-to-br from-color1 to-color1lite flex flex-col items-center justify-center text-white font-sans px-6">
       {/* Hero Section */}
@@ -24,7 +30,7 @@ const Homepage = () => {
           Click below to access, filtered by your admin role
         </p>
         <button
-          onClick={() => (window.location.href = "/login")}
+          onClick={handleLogin}
           className="w-full bg-color1 text-white py-3 px-6 rounded-xl font-semibold text-lg hover:bg-color4lite transition duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-color4"
         >
           Login
