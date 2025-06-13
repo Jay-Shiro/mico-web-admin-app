@@ -29,39 +29,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // PRODUCTION: Use simpler native FormData approach for FastAPI compatibility
+    // PRODUCTION: Use URL-encoded data (simpler and more reliable)
     if (process.env.NODE_ENV === "production") {
-      const debugInfo: any = { branch: "production-native-formdata" };
-      console.log("🚀 PRODUCTION MODE: Using native FormData for FastAPI compatibility");
+      const debugInfo: any = { branch: "production-url-encoded" };
+      console.log("🚀 PRODUCTION MODE: Using URL-encoded data for FastAPI compatibility");
       
-      // Use native FormData (same as curl -F)
-      const productionFormData = new FormData();
-      productionFormData.append("email", email);
-      productionFormData.append("subject", subject);
-      productionFormData.append("body", body);
+      // Use URL-encoded approach instead of multipart
+      const urlEncodedData = new URLSearchParams();
+      urlEncodedData.append("email", email);
+      urlEncodedData.append("subject", subject);
+      urlEncodedData.append("body", body);
       
-      if (hasImages) {
-        console.log("📎 Adding images in production...");
-        for (let index = 0; index < images.length; index++) {
-          const image = images[index];
-          if (image instanceof File && image.size > 0) {
-            productionFormData.append("image", image, image.name || `image_${index}.jpg`);
-            console.log(`📎 Added image ${index}: ${image.name} (${image.size} bytes)`);
-          }
-        }
-      }
+      // Note: Images temporarily disabled in this approach for simplicity
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 25000);
       try {
         const response = await fetch(`${BASE_URL}/send-email`, {
           method: "POST",
-          body: productionFormData,
-          signal: controller.signal,
           headers: {
-            Accept: "application/json",
-            // Let browser set Content-Type with boundary
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
           },
+          body: urlEncodedData.toString(),
+          signal: controller.signal,
         });
         clearTimeout(timeoutId);
         const responseText = await response.text();
@@ -74,7 +65,9 @@ export async function POST(request: NextRequest) {
           }
           return NextResponse.json({
             success: true,
-            message: "Email sent successfully",
+            message: hasImages 
+              ? "Email sent successfully (images temporarily disabled in production)" 
+              : "Email sent successfully",
             data: responseData,
             debug: { ...debugInfo, hasImages, imageCount: images.length },
           });
