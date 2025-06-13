@@ -88,7 +88,8 @@ export async function POST(request: NextRequest) {
             ...encoder.headers,
             Accept: "application/json",
           },
-        });
+          duplex: "half",
+        } as RequestInit);
         clearTimeout(timeoutId);
         const responseText = await response.text();
         if (response.ok) {
