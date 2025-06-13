@@ -64,7 +64,70 @@ export async function POST(request: NextRequest) {
       console.log("🔄 Body processed for images, blob URLs replaced");
     }
 
-    // Create native FormData for the FastAPI request with proper headers
+    // In production with images, try JSON approach first (better compatibility with FastAPI on Vercel)
+    if (hasImages && process.env.NODE_ENV === 'production') {
+      console.log("🔄 Production mode: trying JSON approach for better FastAPI compatibility...");
+      
+      try {
+        const base64Images = [];
+        for (const image of images) {
+          if (image instanceof File && image.size > 0) {
+            const arrayBuffer = await image.arrayBuffer();
+            const base64 = Buffer.from(arrayBuffer).toString('base64');
+            base64Images.push({
+              name: image.name,
+              type: image.type || 'image/jpeg',
+              data: base64,
+              size: image.size
+            });
+          }
+        }
+
+        const jsonPayload = {
+          email,
+          subject,
+          body: processedBody,
+          images: base64Images
+        };
+
+        console.log("📤 Sending JSON payload with", base64Images.length, "base64 images");
+
+        const jsonResponse = await fetch(`${BASE_URL}/send-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify(jsonPayload),
+        });
+
+        const jsonResponseText = await jsonResponse.text();
+        console.log("📡 JSON approach response:", jsonResponse.status, jsonResponseText.substring(0, 200));
+
+        if (jsonResponse.ok) {
+          let responseData;
+          try {
+            responseData = JSON.parse(jsonResponseText);
+            console.log("✅ Email sent successfully with JSON approach");
+          } catch {
+            responseData = { message: jsonResponseText };
+          }
+
+          return NextResponse.json({
+            success: true,
+            message: "Email sent successfully (JSON approach)",
+            data: responseData,
+          });
+        } else {
+          console.log("❌ JSON approach failed, falling back to FormData...");
+        }
+      } catch (jsonError) {
+        console.error("❌ JSON approach error:", jsonError);
+        console.log("🔄 Falling back to FormData approach...");
+      }
+    }
+
+    // Create native FormData for the FastAPI request (fallback or non-production)
     const fastApiFormData = new FormData();
     fastApiFormData.append("email", email);
     fastApiFormData.append("subject", subject);
@@ -216,130 +279,56 @@ export async function POST(request: NextRequest) {
           data: responseData,
         });
       } else {
-        // Try one more time with Blob instead of File
-        console.log("🔄 Final attempt: trying with Blob conversion...");
+        // Final fallback: try sending without images
+        console.log("🔄 Final fallback: attempting to send without images...");
 
-        const blobFormData = new FormData();
-        blobFormData.append("email", email);
-        blobFormData.append("subject", subject);
-        blobFormData.append("body", processedBody);
+        const noImageFormData = new FormData();
+        noImageFormData.append("email", email);
+        noImageFormData.append("subject", subject);
+        noImageFormData.append("body", body); // Use original body without blob URL processing
 
-        for (let index = 0; index < images.length; index++) {
-          const image = images[index];
-          if (image instanceof File && image.size > 0) {
-            try {
-              const arrayBuffer = await image.arrayBuffer();
-              const blob = new Blob([arrayBuffer], {
-                type: image.type || "image/jpeg",
-              });
-              blobFormData.append(
-                "image",
-                blob,
-                image.name || `image_${index}.jpg`
-              );
-              console.log(`📎 Blob - Added image ${index}:`, image.name);
-            } catch (blobError) {
-              console.error(
-                `❌ Error creating blob for image ${index}:`,
-                blobError
-              );
-            }
-          }
-        }
-
-        const blobController = new AbortController();
-        const blobTimeoutId = setTimeout(() => {
-          blobController.abort();
+        const noImageController = new AbortController();
+        const noImageTimeoutId = setTimeout(() => {
+          noImageController.abort();
         }, 30000);
 
-        const blobResponse = await fetch(`${BASE_URL}/send-email`, {
+        const noImageResponse = await fetch(`${BASE_URL}/send-email`, {
           method: "POST",
-          body: blobFormData,
-          signal: blobController.signal,
+          body: noImageFormData,
+          signal: noImageController.signal,
           headers: {
             Accept: "application/json",
           },
         });
 
-        clearTimeout(blobTimeoutId);
-        const blobResponseText = await blobResponse.text();
+        clearTimeout(noImageTimeoutId);
+        const noImageResponseText = await noImageResponse.text();
 
-        if (blobResponse.ok) {
+        if (noImageResponse.ok) {
           let responseData;
           try {
-            responseData = JSON.parse(blobResponseText);
-            console.log("✅ Email sent successfully with Blob approach");
+            responseData = JSON.parse(noImageResponseText);
+            console.log("✅ Email sent successfully without images");
           } catch {
-            responseData = { message: blobResponseText };
+            responseData = { message: noImageResponseText };
           }
 
           return NextResponse.json({
             success: true,
-            message: "Email sent successfully (blob conversion)",
+            message:
+              "Email sent successfully (without images due to processing error)",
             data: responseData,
+            warning: "Images could not be processed and were omitted",
           });
-        }
-
-        console.log(
-          "❌ All FastAPI attempts failed:",
-          blobResponse.status,
-          blobResponseText
-        );
-
-        // Final fallback: try sending without images
-        if (hasImages) {
-          console.log(
-            "🔄 Final fallback: attempting to send without images..."
-          );
-
-          const noImageFormData = new FormData();
-          noImageFormData.append("email", email);
-          noImageFormData.append("subject", subject);
-          noImageFormData.append("body", body); // Use original body without blob URL processing
-
-          const noImageController = new AbortController();
-          const noImageTimeoutId = setTimeout(() => {
-            noImageController.abort();
-          }, 30000);
-
-          const noImageResponse = await fetch(`${BASE_URL}/send-email`, {
-            method: "POST",
-            body: noImageFormData,
-            signal: noImageController.signal,
-            headers: {
-              Accept: "application/json",
-            },
-          });
-
-          clearTimeout(noImageTimeoutId);
-          const noImageResponseText = await noImageResponse.text();
-
-          if (noImageResponse.ok) {
-            let responseData;
-            try {
-              responseData = JSON.parse(noImageResponseText);
-              console.log("✅ Email sent successfully without images");
-            } catch {
-              responseData = { message: noImageResponseText };
-            }
-
-            return NextResponse.json({
-              success: true,
-              message:
-                "Email sent successfully (without images due to processing error)",
-              data: responseData,
-              warning: "Images could not be processed and were omitted",
-            });
-          }
         }
 
         return NextResponse.json(
           {
             error: "Failed to send email via FastAPI (all attempts failed)",
-            details: blobResponseText,
-            status: blobResponse.status,
+            details: noImageResponseText,
+            status: noImageResponse.status,
           },
-          { status: blobResponse.status }
+          { status: noImageResponse.status }
         );
       }
     }
