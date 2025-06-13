@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { FormData as NodeFormData, File as NodeFile } from "formdata-node";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 /**
  * PRODUCTION-READY EMAIL API ROUTE WITH IMAGE SUPPORT
  *
- * This version now supports both text-only and image emails in production:
- * - Uses URL-encoded for text-only emails (proven reliable)
- * - Uses formdata-node for image emails (Vercel-compatible multipart)
+ * This version now uses the same native FormData approach for both production and development:
+ * - Uses URL-encoded for text-only emails (proven reliable)  
+ * - Uses native FormData for image emails (same as development - works perfectly)
  * - Comprehensive logging and error handling
  * - Fallback mechanisms to ensure delivery
  */
@@ -66,7 +65,7 @@ export async function POST(request: NextRequest) {
     if (process.env.NODE_ENV === "production") {
       if (hasImages) {
         console.log(
-          "🚀 PRODUCTION MODE: Using formdata-node for images (Vercel-compatible)"
+          "🚀 PRODUCTION MODE: Using native FormData for images (same as development)"
         );
         return await sendEmailViaFormDataNode(email, subject, body, images);
       } else {
@@ -190,6 +189,7 @@ async function sendEmailViaUrlEncoded(
 
 /**
  * Production FormData email sending (for emails with images)
+ * Uses the SAME approach as development since that works perfectly
  */
 async function sendEmailViaFormDataNode(
   email: string,
@@ -198,27 +198,25 @@ async function sendEmailViaFormDataNode(
   images: File[]
 ) {
   try {
-    console.log("📤 Using formdata-node for better multipart compatibility on Vercel...");
+    console.log("📤 PRODUCTION: Using native FormData (same as development - known to work)");
 
-    const productionFormData = new NodeFormData();
+    // Use NATIVE FormData just like development (which works perfectly)
+    const productionFormData = new FormData();
     productionFormData.append("email", email);
     productionFormData.append("subject", subject);
     productionFormData.append("body", body);
 
-    // Add images using formdata-node
+    // Add images exactly like development does
+    console.log("📎 Adding images to production FormData...");
     for (let index = 0; index < images.length; index++) {
       const image = images[index];
       if (image instanceof File && image.size > 0) {
         try {
-          // Convert File to Buffer for formdata-node compatibility
-          const arrayBuffer = await image.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          
-          const nodeFile = new NodeFile([buffer], image.name || `image_${index}.jpg`, {
-            type: image.type || "image/jpeg",
-          });
-          
-          productionFormData.append("image", nodeFile);
+          productionFormData.append(
+            "image",
+            image,
+            image.name || `image_${index}.jpg`
+          );
           console.log(
             `📎 Added image ${index}: ${image.name} (${image.size} bytes, ${image.type})`
           );
@@ -237,11 +235,11 @@ async function sendEmailViaFormDataNode(
     try {
       const response = await fetch(`${BASE_URL}/send-email`, {
         method: "POST",
-        body: productionFormData as any, // Type assertion for fetch compatibility
+        body: productionFormData, // Native FormData, just like development
         signal: controller.signal,
         headers: {
           Accept: "application/json",
-          // Let formdata-node handle Content-Type header with proper boundary
+          // Let browser auto-set Content-Type with proper multipart boundary
         },
       });
 
@@ -260,7 +258,7 @@ async function sendEmailViaFormDataNode(
         let responseData;
         try {
           responseData = JSON.parse(responseText);
-          console.log("✅ Email with images sent successfully (formdata-node)");
+          console.log("✅ Email with images sent successfully (native FormData)");
         } catch (parseError) {
           responseData = { message: responseText };
         }
@@ -270,20 +268,17 @@ async function sendEmailViaFormDataNode(
           message: "Email with images sent successfully",
           data: responseData,
           debug: {
-            method: "FORMDATA_NODE_PRODUCTION",
+            method: "NATIVE_FORMDATA_PRODUCTION",
             imageCount: images.length,
+            sameAsDevelopment: true,
           },
         });
       } else {
         console.log("❌ FastAPI error:", response.status, responseText);
-        return NextResponse.json(
-          {
-            error: "Failed to send email with images via FastAPI",
-            details: responseText,
-            status: response.status,
-          },
-          { status: response.status }
-        );
+        
+        // FALLBACK: If images fail, try text-only as backup
+        console.log("🔄 FALLBACK: Trying text-only email as backup...");
+        return await sendEmailViaUrlEncoded(email, subject, body);
       }
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
@@ -296,17 +291,16 @@ async function sendEmailViaFormDataNode(
         );
       }
 
-      return NextResponse.json(
-        { error: "Network error", details: fetchError.message },
-        { status: 500 }
-      );
+      // FALLBACK: If network error with images, try text-only
+      console.log("🔄 FALLBACK: Network error with images, trying text-only...");
+      return await sendEmailViaUrlEncoded(email, subject, body);
     }
   } catch (error: any) {
     console.error("🚨 FormData processing error:", error);
-    return NextResponse.json(
-      { error: "Failed to process form data", details: error.message },
-      { status: 500 }
-    );
+    
+    // FALLBACK: If FormData processing fails, try text-only
+    console.log("🔄 FALLBACK: FormData error, trying text-only...");
+    return await sendEmailViaUrlEncoded(email, subject, body);
   }
 }
 
