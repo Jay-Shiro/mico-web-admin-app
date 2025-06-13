@@ -67,17 +67,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // PRODUCTION STRATEGY: Use native FormData (same as development) for all emails
+    // PRODUCTION STRATEGY: Use JSON with base64 images for reliability
     if (process.env.NODE_ENV === "production") {
-      console.log(
-        "🚀 PRODUCTION MODE: Using native FormData (same as development - proven to work)"
-      );
+      console.log("🚀 PRODUCTION MODE: Using JSON with base64 for FastAPI compatibility");
       console.log("📋 Production email details:", {
         hasImages,
         imageCount: images.length,
-        approach: "NATIVE_FORMDATA_LIKE_DEVELOPMENT"
+        approach: "JSON_BASE64_PRODUCTION"
       });
-      return await sendEmailViaProductionFormData(email, subject, body, images);
+      
+      if (hasImages) {
+        console.log("📎 Production: Using JSON with base64 images");
+        return await sendEmailViaJsonWithBase64(email, subject, body, images);
+      } else {
+        console.log("📝 Production: Using JSON for text-only email");
+        return await sendEmailViaJsonTextOnly(email, subject, body);
+      }
     }
 
     // DEVELOPMENT MODE: Use FormData with images as before
@@ -97,6 +102,99 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Production JSON email sending for text-only emails
+ */
+async function sendEmailViaJsonTextOnly(
+  email: string,
+  subject: string,
+  body: string
+) {
+  try {
+    console.log("📤 PRODUCTION: Sending text-only email via JSON...");
+
+    // Create JSON payload for text-only email
+    const jsonPayload = {
+      email: email,
+      subject: subject,
+      body: body,
+      attachments: [] // Empty attachments array
+    };
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log("⏰ Request timeout after 30s");
+      controller.abort();
+    }, 30000);
+
+    try {
+      const response = await fetch(`${BASE_URL}/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(jsonPayload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log("📡 FastAPI response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      const responseText = await response.text();
+      console.log("📄 FastAPI response text:", responseText);
+
+      if (response.ok) {
+        let responseData;
+        try {
+          responseData = JSON.parse(responseText);
+          console.log("✅ Text-only email sent successfully (JSON)");
+        } catch (parseError) {
+          responseData = { message: responseText };
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: "Email sent successfully",
+          data: responseData,
+          debug: {
+            method: "JSON_TEXT_ONLY_PRODUCTION",
+            payloadSize: JSON.stringify(jsonPayload).length,
+          },
+        });
+      } else {
+        console.log("❌ FastAPI error with JSON text-only:", response.status, responseText);
+        
+        // FALLBACK: Try URL-encoded as backup
+        console.log("🔄 FALLBACK: JSON failed, trying URL-encoded...");
+        return await sendEmailViaUrlEncoded(email, subject, body);
+      }
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      console.error("🚨 Fetch error with JSON text-only:", fetchError);
+
+      if (fetchError.name === "AbortError") {
+        return NextResponse.json({ error: "Request timeout" }, { status: 408 });
+      }
+
+      // FALLBACK: Try URL-encoded
+      console.log("🔄 FALLBACK: Network error with JSON, trying URL-encoded...");
+      return await sendEmailViaUrlEncoded(email, subject, body);
+    }
+  } catch (error: any) {
+    console.error("🚨 JSON text-only processing error:", error);
+    
+    // FALLBACK: Try URL-encoded
+    console.log("🔄 FALLBACK: JSON processing error, trying URL-encoded...");
+    return await sendEmailViaUrlEncoded(email, subject, body);
   }
 }
 
