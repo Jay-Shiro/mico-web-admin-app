@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { FormData as NodeFormData, File as NodeFile } from "formdata-node";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
+
+/**
+ * Email sending API route with Vercel-optimized multipart form handling
+ * 
+ * Key improvements for production deployment:
+ * - Uses formdata-node instead of native FormData for better Vercel compatibility
+ * - Proper multipart boundary generation that FastAPI can parse correctly
+ * - Multiple retry strategies for robust email delivery
+ */
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,76 +74,14 @@ export async function POST(request: NextRequest) {
       console.log("🔄 Body processed for images, blob URLs replaced");
     }
 
-    // In production with images, try JSON approach first (better compatibility with FastAPI on Vercel)
-    if (hasImages && process.env.NODE_ENV === 'production') {
-      console.log("🔄 Production mode: trying JSON approach for better FastAPI compatibility...");
-      
-      try {
-        const base64Images = [];
-        for (const image of images) {
-          if (image instanceof File && image.size > 0) {
-            const arrayBuffer = await image.arrayBuffer();
-            const base64 = Buffer.from(arrayBuffer).toString('base64');
-            base64Images.push({
-              name: image.name,
-              type: image.type || 'image/jpeg',
-              data: base64,
-              size: image.size
-            });
-          }
-        }
-
-        const jsonPayload = {
-          email,
-          subject,
-          body: processedBody,
-          images: base64Images
-        };
-
-        console.log("📤 Sending JSON payload with", base64Images.length, "base64 images");
-
-        const jsonResponse = await fetch(`${BASE_URL}/send-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify(jsonPayload),
-        });
-
-        const jsonResponseText = await jsonResponse.text();
-        console.log("📡 JSON approach response:", jsonResponse.status, jsonResponseText.substring(0, 200));
-
-        if (jsonResponse.ok) {
-          let responseData;
-          try {
-            responseData = JSON.parse(jsonResponseText);
-            console.log("✅ Email sent successfully with JSON approach");
-          } catch {
-            responseData = { message: jsonResponseText };
-          }
-
-          return NextResponse.json({
-            success: true,
-            message: "Email sent successfully (JSON approach)",
-            data: responseData,
-          });
-        } else {
-          console.log("❌ JSON approach failed, falling back to FormData...");
-        }
-      } catch (jsonError) {
-        console.error("❌ JSON approach error:", jsonError);
-        console.log("🔄 Falling back to FormData approach...");
-      }
-    }
-
-    // Create native FormData for the FastAPI request (fallback or non-production)
-    const fastApiFormData = new FormData();
+    // Create FormData using formdata-node for better Vercel compatibility with FastAPI
+    console.log("📤 Using formdata-node for better multipart compatibility on Vercel...");
+    const fastApiFormData = new NodeFormData();
     fastApiFormData.append("email", email);
     fastApiFormData.append("subject", subject);
     fastApiFormData.append("body", processedBody);
 
-    // Add all images if they exist with proper content type handling
+    // Add all images if they exist with proper content type handling using NodeFile
     if (hasImages) {
       for (let index = 0; index < images.length; index++) {
         const image = images[index];
@@ -143,15 +91,16 @@ export async function POST(request: NextRequest) {
             const fileName = image.name || `image_${index}.jpg`;
             const fileType = image.type || "image/jpeg";
 
-            // Convert file to ArrayBuffer and then to Blob for better compatibility
+            // Convert file to ArrayBuffer for NodeFile compatibility
             const arrayBuffer = await image.arrayBuffer();
-            const blob = new Blob([arrayBuffer], { type: fileType });
-            const imageFile = new File([blob], fileName, {
+            
+            // Create NodeFile for better compatibility with FastAPI
+            const nodeFile = new NodeFile([arrayBuffer], fileName, {
               type: fileType,
               lastModified: Date.now(),
             });
 
-            fastApiFormData.append("image", imageFile);
+            fastApiFormData.append("image", nodeFile);
             console.log(
               `📎 Added image ${index}:`,
               fileName,
@@ -194,13 +143,11 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(`${BASE_URL}/send-email`, {
       method: "POST",
-      body: fastApiFormData,
+      body: fastApiFormData as any, // formdata-node FormData
       signal: controller.signal,
-      // Don't set Content-Type - let the browser handle multipart boundary
+      // Let formdata-node handle the Content-Type with proper boundary
       headers: {
-        // Remove any conflicting headers that might interfere
         Accept: "application/json",
-        // Let browser set Content-Type automatically for FormData with boundary
       },
     });
 
@@ -227,19 +174,28 @@ export async function POST(request: NextRequest) {
     ) {
       console.log("🔄 Retrying without File object recreation...");
 
-      // Create a new FormData with original files
-      const retryFormData = new FormData();
+      // Create a new FormData with original files using NodeFormData
+      const retryFormData = new NodeFormData();
       retryFormData.append("email", email);
       retryFormData.append("subject", subject);
       retryFormData.append("body", processedBody);
 
-      // Add original images without modification
-      images.forEach((image, index) => {
+      // Add original images without modification using NodeFile
+      for (let index = 0; index < images.length; index++) {
+        const image = images[index];
         if (image instanceof File && image.size > 0) {
-          retryFormData.append("image", image);
-          console.log(`📎 Retry - Added original image ${index}:`, image.name);
+          try {
+            const arrayBuffer = await image.arrayBuffer();
+            const nodeFile = new NodeFile([arrayBuffer], image.name, {
+              type: image.type || "image/jpeg",
+            });
+            retryFormData.append("image", nodeFile);
+            console.log(`📎 Retry - Added original image ${index}:`, image.name);
+          } catch (retryError) {
+            console.error(`❌ Error processing retry image ${index}:`, retryError);
+          }
         }
-      });
+      }
 
       const retryController = new AbortController();
       const retryTimeoutId = setTimeout(() => {
@@ -248,7 +204,7 @@ export async function POST(request: NextRequest) {
 
       const retryResponse = await fetch(`${BASE_URL}/send-email`, {
         method: "POST",
-        body: retryFormData,
+        body: retryFormData as any, // formdata-node FormData
         signal: retryController.signal,
         headers: {
           Accept: "application/json",
@@ -282,7 +238,7 @@ export async function POST(request: NextRequest) {
         // Final fallback: try sending without images
         console.log("🔄 Final fallback: attempting to send without images...");
 
-        const noImageFormData = new FormData();
+        const noImageFormData = new NodeFormData();
         noImageFormData.append("email", email);
         noImageFormData.append("subject", subject);
         noImageFormData.append("body", body); // Use original body without blob URL processing
@@ -294,7 +250,7 @@ export async function POST(request: NextRequest) {
 
         const noImageResponse = await fetch(`${BASE_URL}/send-email`, {
           method: "POST",
-          body: noImageFormData,
+          body: noImageFormData as any, // formdata-node FormData
           signal: noImageController.signal,
           headers: {
             Accept: "application/json",
