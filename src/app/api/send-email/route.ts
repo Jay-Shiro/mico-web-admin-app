@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { FormData as NodeFormData, File as NodeFile } from 'formdata-node';
-import { FormDataEncoder } from 'form-data-encoder';
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
@@ -31,65 +29,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // PRODUCTION: Use formdata-node + form-data-encoder for FastAPI compatibility
+    // PRODUCTION: Use simpler native FormData approach for FastAPI compatibility
     if (process.env.NODE_ENV === "production") {
-      const debugInfo: any = { branch: "production-formdata-node" };
-      console.log("🚀 PRODUCTION MODE: Using formdata-node + form-data-encoder for FastAPI compatibility");
-      // Build a formdata-node FormData
-      const nodeForm = new NodeFormData();
-      nodeForm.set("email", email);
-      nodeForm.set("subject", subject);
-      nodeForm.set("body", body);
+      const debugInfo: any = { branch: "production-native-formdata" };
+      console.log("🚀 PRODUCTION MODE: Using native FormData for FastAPI compatibility");
+      
+      // Use native FormData (same as curl -F)
+      const productionFormData = new FormData();
+      productionFormData.append("email", email);
+      productionFormData.append("subject", subject);
+      productionFormData.append("body", body);
+      
       if (hasImages) {
+        console.log("📎 Adding images in production...");
         for (let index = 0; index < images.length; index++) {
           const image = images[index];
           if (image instanceof File && image.size > 0) {
-            const arrayBuffer = await image.arrayBuffer();
-            const nodeFile = new NodeFile([new Uint8Array(arrayBuffer)], image.name || `image_${index}.jpg`, {
-              type: image.type,
-              lastModified: image.lastModified,
-            });
-            nodeForm.append("image", nodeFile);
+            productionFormData.append("image", image, image.name || `image_${index}.jpg`);
+            console.log(`📎 Added image ${index}: ${image.name} (${image.size} bytes)`);
           }
         }
       }
-      // Encode using FormDataEncoder
-      const encoder = new FormDataEncoder(nodeForm);
-      const asyncIterator = encoder.encode()[Symbol.asyncIterator]();
-      const bodyStream = new ReadableStream({
-        async pull(controller) {
-          const { value, done } = await asyncIterator.next();
-          if (done) {
-            controller.close();
-          } else {
-            controller.enqueue(value);
-          }
-        }
-      });
-      // Debug: log headers and a sample of the body
-      const debugChunks: Uint8Array[] = [];
-      let debugBytes = 0;
-      for await (const chunk of encoder.encode()) {
-        debugChunks.push(chunk);
-        debugBytes += chunk.length;
-        if (debugBytes > 2048) break;
-      }
-      const debugSample = Buffer.concat(debugChunks).toString('utf8');
-      console.log('🪵 [DEBUG] FormDataEncoder headers:', encoder.headers);
-      console.log('🪵 [DEBUG] First 2KB of encoded body:', debugSample);
+      
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 25000);
       try {
         const response = await fetch(`${BASE_URL}/send-email`, {
           method: "POST",
-          body: bodyStream,
+          body: productionFormData,
           signal: controller.signal,
           headers: {
-            ...encoder.headers,
             Accept: "application/json",
+            // Let browser set Content-Type with boundary
           },
-          duplex: "half",
-        } as RequestInit);
+        });
         clearTimeout(timeoutId);
         const responseText = await response.text();
         if (response.ok) {
@@ -103,7 +76,7 @@ export async function POST(request: NextRequest) {
             success: true,
             message: "Email sent successfully",
             data: responseData,
-            debug: { ...debugInfo, headers: encoder.headers, bodySample: debugSample },
+            debug: { ...debugInfo, hasImages, imageCount: images.length },
           });
         } else {
           return NextResponse.json(
@@ -111,7 +84,7 @@ export async function POST(request: NextRequest) {
               error: "Failed to send email via FastAPI",
               details: responseText,
               status: response.status,
-              debug: { ...debugInfo, headers: encoder.headers, bodySample: debugSample },
+              debug: { ...debugInfo, hasImages, imageCount: images.length },
             },
             { status: response.status }
           );
