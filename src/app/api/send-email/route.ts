@@ -19,7 +19,9 @@ export async function POST(request: NextRequest) {
 
     // Handle images
     const images = formData.getAll("image") as File[];
-    const hasImages = images.length > 0 && images.some((img) => img instanceof File && img.size > 0);
+    const hasImages =
+      images.length > 0 &&
+      images.some((img) => img instanceof File && img.size > 0);
 
     // Validate required fields
     if (!email || !subject || !body) {
@@ -29,73 +31,180 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // PRODUCTION: Use URL-encoded data (simpler and more reliable)
+    // PRODUCTION: Hybrid approach - JSON for images, URL-encoded for text-only
     if (process.env.NODE_ENV === "production") {
-      const debugInfo: any = { branch: "production-url-encoded" };
-      console.log("🚀 PRODUCTION MODE: Using URL-encoded data for FastAPI compatibility");
-      
-      // Use URL-encoded approach instead of multipart
-      const urlEncodedData = new URLSearchParams();
-      urlEncodedData.append("email", email);
-      urlEncodedData.append("subject", subject);
-      urlEncodedData.append("body", body);
-      
-      // Note: Images temporarily disabled in this approach for simplicity
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
-      try {
-        const response = await fetch(`${BASE_URL}/send-email`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
-          },
-          body: urlEncodedData.toString(),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        const responseText = await response.text();
-        if (response.ok) {
-          let responseData;
-          try {
-            responseData = JSON.parse(responseText);
-          } catch {
-            responseData = { message: responseText };
+      const debugInfo: any = {
+        branch: hasImages
+          ? "production-json-with-images"
+          : "production-url-encoded",
+        hasImages,
+        imageCount: images.length,
+      };
+
+      if (hasImages) {
+        console.log(
+          "🚀 PRODUCTION MODE: Using JSON with base64 images for FastAPI compatibility"
+        );
+
+        // Convert images to base64 attachments
+        const attachments = [];
+        for (let i = 0; i < images.length; i++) {
+          const image = images[i];
+          if (image instanceof File && image.size > 0) {
+            try {
+              const arrayBuffer = await image.arrayBuffer();
+              const base64 = Buffer.from(arrayBuffer).toString("base64");
+              attachments.push({
+                filename: image.name || `image_${i}.jpg`,
+                content: base64,
+                type: image.type || "image/jpeg",
+                disposition: "attachment",
+              });
+              console.log(
+                `📎 Converted image ${i} to base64: ${image.name} (${image.size} bytes)`
+              );
+            } catch (error) {
+              console.error(`❌ Error converting image ${i}:`, error);
+            }
           }
-          return NextResponse.json({
-            success: true,
-            message: hasImages 
-              ? "Email sent successfully (images temporarily disabled in production)" 
-              : "Email sent successfully",
-            data: responseData,
-            debug: { ...debugInfo, hasImages, imageCount: images.length },
+        }
+
+        // Send as JSON with base64 attachments
+        const jsonPayload = {
+          to: email,
+          subject: subject,
+          body: body,
+          attachments: attachments,
+        };
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+        try {
+          const response = await fetch(`${BASE_URL}/send-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify(jsonPayload),
+            signal: controller.signal,
           });
-        } else {
+
+          clearTimeout(timeoutId);
+          const responseText = await response.text();
+
+          if (response.ok) {
+            let responseData;
+            try {
+              responseData = JSON.parse(responseText);
+            } catch {
+              responseData = { message: responseText };
+            }
+            return NextResponse.json({
+              success: true,
+              message: "Email with images sent successfully",
+              data: responseData,
+              debug: debugInfo,
+            });
+          } else {
+            return NextResponse.json(
+              {
+                error: "Failed to send email with images via FastAPI",
+                details: responseText,
+                status: response.status,
+                debug: debugInfo,
+              },
+              { status: response.status }
+            );
+          }
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
           return NextResponse.json(
             {
-              error: "Failed to send email via FastAPI",
-              details: responseText,
-              status: response.status,
-              debug: { ...debugInfo, hasImages, imageCount: images.length },
+              error: "Network error sending email with images",
+              details: fetchError.message,
+              debug: { ...debugInfo, fetchErrorName: fetchError.name },
             },
-            { status: response.status }
+            { status: 500 }
           );
         }
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-        return NextResponse.json(
-          {
-            error: "Network error",
-            details: fetchError.message,
-            debug: { ...debugInfo, fetchErrorName: fetchError.name, fetchErrorType: typeof fetchError },
-          },
-          { status: 500 }
-        );
+      } else {
+        console.log("🚀 PRODUCTION MODE: Using URL-encoded data (no images)");
+
+        // Use the working URL-encoded approach for text-only emails
+        const urlEncodedData = new URLSearchParams();
+        urlEncodedData.append("email", email);
+        urlEncodedData.append("subject", subject);
+        urlEncodedData.append("body", body);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+        try {
+          const response = await fetch(`${BASE_URL}/send-email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              Accept: "application/json",
+            },
+            body: urlEncodedData.toString(),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+          const responseText = await response.text();
+          if (response.ok) {
+            let responseData;
+            try {
+              responseData = JSON.parse(responseText);
+            } catch {
+              responseData = { message: responseText };
+            }
+            return NextResponse.json({
+              success: true,
+              message: hasImages
+                ? "Email sent successfully (images temporarily disabled in production)"
+                : "Email sent successfully",
+              data: responseData,
+              debug: { ...debugInfo, hasImages, imageCount: images.length },
+            });
+          } else {
+            return NextResponse.json(
+              {
+                error: "Failed to send email via FastAPI",
+                details: responseText,
+                status: response.status,
+                debug: { ...debugInfo, hasImages, imageCount: images.length },
+              },
+              { status: response.status }
+            );
+          }
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          return NextResponse.json(
+            {
+              error: "Network error",
+              details: fetchError.message,
+              debug: {
+                ...debugInfo,
+                fetchErrorName: fetchError.name,
+                fetchErrorType: typeof fetchError,
+              },
+            },
+            { status: 500 }
+          );
+        }
       }
+    } else {
+      // DEVELOPMENT MODE: Use FormData with images as before
+      return await sendEmailViaDevelopmentFormData(
+        email,
+        subject,
+        body,
+        images,
+        { branch: "development-native-formdata" }
+      );
     }
-    // DEVELOPMENT MODE: Use FormData with images as before
-    return await sendEmailViaDevelopmentFormData(email, subject, body, images, { branch: "development-native-formdata" });
   } catch (error: any) {
     return NextResponse.json(
       {
@@ -158,12 +267,13 @@ async function sendEmailViaDevelopmentFormData(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, 30000);        const response = await fetch(`${BASE_URL}/send-email`, {
-          method: "POST",
-          body: fastApiFormData,
-          signal: controller.signal,
-          // No headers - let the browser handle everything
-        });
+    }, 30000);
+    const response = await fetch(`${BASE_URL}/send-email`, {
+      method: "POST",
+      body: fastApiFormData,
+      signal: controller.signal,
+      // No headers - let the browser handle everything
+    });
 
     clearTimeout(timeoutId);
     const responseText = await response.text();
@@ -196,7 +306,11 @@ async function sendEmailViaDevelopmentFormData(
     }
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Development email sending failed", details: error.message, debug: debugInfo },
+      {
+        error: "Development email sending failed",
+        details: error.message,
+        debug: debugInfo,
+      },
       { status: 500 }
     );
   }
