@@ -6,7 +6,7 @@ const BASE_URL = process.env.NEXT_API_BASE_URL;
  * PRODUCTION-READY EMAIL API ROUTE WITH IMAGE SUPPORT
  *
  * This version now uses the same native FormData approach for both production and development:
- * - Uses URL-encoded for text-only emails (proven reliable)  
+ * - Uses URL-encoded for text-only emails (proven reliable)
  * - Uses native FormData for image emails (same as development - works perfectly)
  * - Comprehensive logging and error handling
  * - Fallback mechanisms to ensure delivery
@@ -36,16 +36,25 @@ export async function POST(request: NextRequest) {
       body: body ? body.length + " chars" : "✗",
     });
 
-    // Handle images (but disable in production for now)
+    // Handle images (now enabled in production)
     const images = formData.getAll("image") as File[];
     const hasImages =
       images.length > 0 &&
       images.some((img) => img instanceof File && img.size > 0);
 
     console.log(
-      "🖼️ Images found:",
-      images.length,
-      hasImages ? "Valid images detected" : "No valid images"
+      "🖼️ Images analysis:",
+      {
+        totalImagesFound: images.length,
+        hasValidImages: hasImages,
+        imageDetails: images.map((img, i) => ({
+          index: i,
+          isFile: img instanceof File,
+          name: img instanceof File ? img.name : "N/A",
+          size: img instanceof File ? img.size : "N/A",
+          type: img instanceof File ? img.type : "N/A",
+        }))
+      }
     );
 
     // Validate required fields
@@ -65,9 +74,9 @@ export async function POST(request: NextRequest) {
     if (process.env.NODE_ENV === "production") {
       if (hasImages) {
         console.log(
-          "🚀 PRODUCTION MODE: Using native FormData for images (same as development)"
+          "🚀 PRODUCTION MODE: Using JSON with base64 images for maximum compatibility"
         );
-        return await sendEmailViaFormDataNode(email, subject, body, images);
+        return await sendEmailViaJsonWithBase64(email, subject, body, images);
       } else {
         console.log(
           "🚀 PRODUCTION MODE: Using URL-encoded for text-only (proven reliable)"
@@ -93,6 +102,134 @@ export async function POST(request: NextRequest) {
       },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Production JSON email sending with base64 images (most reliable for Vercel)
+ */
+async function sendEmailViaJsonWithBase64(
+  email: string,
+  subject: string,
+  body: string,
+  images: File[]
+) {
+  try {
+    console.log("📤 PRODUCTION: Converting images to base64 for JSON payload...");
+
+    // Convert images to base64 attachments
+    const attachments = [];
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i];
+      if (image instanceof File && image.size > 0) {
+        try {
+          console.log(`📎 Processing image ${i}: ${image.name} (${image.size} bytes, ${image.type})`);
+          
+          const arrayBuffer = await image.arrayBuffer();
+          const base64 = Buffer.from(arrayBuffer).toString("base64");
+          
+          attachments.push({
+            filename: image.name || `image_${i}.jpg`,
+            content: base64,
+            type: image.type || "image/jpeg",
+            disposition: "attachment",
+          });
+          
+          console.log(`✅ Converted image ${i} to base64: ${image.name}`);
+        } catch (error) {
+          console.error(`❌ Error converting image ${i}:`, error);
+        }
+      }
+    }
+
+    // Create JSON payload
+    const jsonPayload = {
+      email: email,
+      subject: subject,
+      body: body,
+      attachments: attachments,
+    };
+
+    console.log("📤 Sending JSON payload with base64 images to FastAPI...");
+    console.log("📋 Payload info:", {
+      email: email,
+      subject: subject,
+      bodyLength: body.length,
+      attachmentCount: attachments.length,
+    });
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log("⏰ Request timeout after 30s");
+      controller.abort();
+    }, 30000);
+
+    try {
+      const response = await fetch(`${BASE_URL}/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(jsonPayload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      console.log("📡 FastAPI response:", {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+      });
+
+      const responseText = await response.text();
+      console.log("📄 FastAPI response text:", responseText);
+
+      if (response.ok) {
+        let responseData;
+        try {
+          responseData = JSON.parse(responseText);
+          console.log("✅ Email with images sent successfully (JSON + base64)");
+        } catch (parseError) {
+          responseData = { message: responseText };
+        }
+
+        return NextResponse.json({
+          success: true,
+          message: "Email with images sent successfully",
+          data: responseData,
+          debug: {
+            method: "JSON_BASE64_PRODUCTION",
+            imageCount: attachments.length,
+            payloadSize: JSON.stringify(jsonPayload).length,
+          },
+        });
+      } else {
+        console.log("❌ FastAPI error with JSON:", response.status, responseText);
+
+        // FALLBACK: If JSON fails, try text-only as backup
+        console.log("🔄 FALLBACK: JSON failed, trying text-only email as backup...");
+        return await sendEmailViaUrlEncoded(email, subject, body);
+      }
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      console.error("🚨 Fetch error with JSON:", fetchError);
+
+      if (fetchError.name === "AbortError") {
+        return NextResponse.json({ error: "Request timeout" }, { status: 408 });
+      }
+
+      // FALLBACK: If network error with JSON, try text-only
+      console.log("🔄 FALLBACK: Network error with JSON, trying text-only...");
+      return await sendEmailViaUrlEncoded(email, subject, body);
+    }
+  } catch (error: any) {
+    console.error("🚨 JSON processing error:", error);
+
+    // FALLBACK: If JSON processing fails, try text-only
+    console.log("🔄 FALLBACK: JSON error, trying text-only...");
+    return await sendEmailViaUrlEncoded(email, subject, body);
   }
 }
 
@@ -174,10 +311,7 @@ async function sendEmailViaUrlEncoded(
     console.error("🚨 Fetch error:", fetchError);
 
     if (fetchError.name === "AbortError") {
-      return NextResponse.json(
-        { error: "Request timeout" },
-        { status: 408 }
-      );
+      return NextResponse.json({ error: "Request timeout" }, { status: 408 });
     }
 
     return NextResponse.json(
@@ -198,7 +332,9 @@ async function sendEmailViaFormDataNode(
   images: File[]
 ) {
   try {
-    console.log("📤 PRODUCTION: Using native FormData (same as development - known to work)");
+    console.log(
+      "📤 PRODUCTION: Using native FormData (same as development - known to work)"
+    );
 
     // Use NATIVE FormData just like development (which works perfectly)
     const productionFormData = new FormData();
@@ -258,7 +394,9 @@ async function sendEmailViaFormDataNode(
         let responseData;
         try {
           responseData = JSON.parse(responseText);
-          console.log("✅ Email with images sent successfully (native FormData)");
+          console.log(
+            "✅ Email with images sent successfully (native FormData)"
+          );
         } catch (parseError) {
           responseData = { message: responseText };
         }
@@ -275,7 +413,7 @@ async function sendEmailViaFormDataNode(
         });
       } else {
         console.log("❌ FastAPI error:", response.status, responseText);
-        
+
         // FALLBACK: If images fail, try text-only as backup
         console.log("🔄 FALLBACK: Trying text-only email as backup...");
         return await sendEmailViaUrlEncoded(email, subject, body);
@@ -285,19 +423,18 @@ async function sendEmailViaFormDataNode(
       console.error("🚨 Fetch error:", fetchError);
 
       if (fetchError.name === "AbortError") {
-        return NextResponse.json(
-          { error: "Request timeout" },
-          { status: 408 }
-        );
+        return NextResponse.json({ error: "Request timeout" }, { status: 408 });
       }
 
       // FALLBACK: If network error with images, try text-only
-      console.log("🔄 FALLBACK: Network error with images, trying text-only...");
+      console.log(
+        "🔄 FALLBACK: Network error with images, trying text-only..."
+      );
       return await sendEmailViaUrlEncoded(email, subject, body);
     }
   } catch (error: any) {
     console.error("🚨 FormData processing error:", error);
-    
+
     // FALLBACK: If FormData processing fails, try text-only
     console.log("🔄 FALLBACK: FormData error, trying text-only...");
     return await sendEmailViaUrlEncoded(email, subject, body);
