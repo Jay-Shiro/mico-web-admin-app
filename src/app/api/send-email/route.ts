@@ -165,16 +165,12 @@ async function sendEmailViaDevelopmentFormData(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, 30000);
-
-    const response = await fetch(`${BASE_URL}/send-email`, {
-      method: "POST",
-      body: fastApiFormData,
-      signal: controller.signal,
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    }, 30000);        const response = await fetch(`${BASE_URL}/send-email`, {
+          method: "POST",
+          body: fastApiFormData,
+          signal: controller.signal,
+          // No headers - let the browser handle everything
+        });
 
     clearTimeout(timeoutId);
     const responseText = await response.text();
