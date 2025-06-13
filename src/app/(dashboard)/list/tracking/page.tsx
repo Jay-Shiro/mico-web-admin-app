@@ -174,8 +174,13 @@ const DeliveriesListPage = () => {
         const formattedDate = isMounted
           ? new Date(searchDate).toLocaleDateString()
           : "";
-        const searchString =
-          `${delivery._id} ${delivery.vehicletype} ${delivery.packagesize} ${safeRenderLocation(delivery.startpoint)} ${delivery.distance} ${delivery.status.current} ${safeRenderLocation(delivery.endpoint)} ${formattedDate}`.toLowerCase();
+        const searchString = `${delivery._id} ${delivery.vehicletype} ${
+          delivery.packagesize
+        } ${safeRenderLocation(delivery.startpoint)} ${delivery.distance} ${
+          delivery.status.current
+        } ${safeRenderLocation(
+          delivery.endpoint
+        )} ${formattedDate}`.toLowerCase();
 
         return searchString.includes(searchInput.toLowerCase());
       });

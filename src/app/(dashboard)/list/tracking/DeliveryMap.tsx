@@ -198,12 +198,12 @@ const DeliveryMap = ({
                   <p><strong>Status:</strong> <span class="ml-1">${
                     delivery.status.current
                   }</span></p>
-                  <p><strong>From:</strong> <span class="ml-1 break-words">${
-                    safeRenderLocation(delivery.startpoint)
-                  }</span></p>
-                  <p><strong>To:</strong> <span class="ml-1 break-words">${
-                    safeRenderLocation(delivery.endpoint)
-                  }</span></p>
+                  <p><strong>From:</strong> <span class="ml-1 break-words">${safeRenderLocation(
+                    delivery.startpoint
+                  )}</span></p>
+                  <p><strong>To:</strong> <span class="ml-1 break-words">${safeRenderLocation(
+                    delivery.endpoint
+                  )}</span></p>
                   <p><strong>Last Update:</strong> <span class="ml-1">${new Date(
                     location.last_updated
                   ).toLocaleString()}</span></p>
