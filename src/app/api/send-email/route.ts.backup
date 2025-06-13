@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 /**
- * SIMPLIFIED JSON-ONLY EMAIL API ROUTE
- *
- * This version matches the new FastAPI endpoint that only accepts JSON format:
- * - Converts FormData to JSON with EmailWithAttachments structure
- * - Converts images to base64 for reliable transmission
- * - Single clean function with proper error handling
- * - No fallbacks needed since we know the exact format that works
+ * SIMPLIFIED EMAIL API ROUTE - JSON ONLY
+ * 
+ * This route now uses the simplified FastAPI endpoint that only accepts JSON format.
+ * FastAPI expects: { email, subject, body, attachments: [...] }
+ * - Converts images to base64 for attachments
+ * - Single, reliable method for both production and development
+ * - No complex fallback logic needed
  */
 
 export async function POST(request: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const subject = formData.get("subject") as string;
     const body = formData.get("body") as string;
 
-    console.log("📋 Received data:", {
+    console.log("📋 Request data:", {
       email: email ? "✓" : "✗",
       subject: subject ? "✓" : "✗",
       body: body ? `${body.length} chars` : "✗",
@@ -40,28 +40,28 @@ export async function POST(request: NextRequest) {
 
     // Handle images
     const images = formData.getAll("image") as File[];
-    const validImages = images.filter(
-      (img) => img instanceof File && img.size > 0
-    );
-
-    console.log(`📎 Found ${validImages.length} valid images`);
+    const validImages = images.filter(img => img instanceof File && img.size > 0);
+    
+    console.log("🖼️ Images found:", validImages.length);
 
     // Convert images to base64 attachments
     const attachments = [];
     for (let i = 0; i < validImages.length; i++) {
       const image = validImages[i];
       try {
+        console.log(`📎 Processing image ${i}: ${image.name} (${image.size} bytes)`);
+        
         const arrayBuffer = await image.arrayBuffer();
         const base64 = Buffer.from(arrayBuffer).toString("base64");
-
+        
         attachments.push({
           filename: image.name || `image_${i}.jpg`,
           content: base64,
           type: image.type || "image/jpeg",
           disposition: "attachment",
         });
-
-        console.log(`✅ Converted ${image.name} to base64`);
+        
+        console.log(`✅ Converted image ${i} to base64`);
       } catch (error) {
         console.error(`❌ Error converting image ${i}:`, error);
       }
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Send to FastAPI
     return await sendEmailToFastAPI(email, subject, body, attachments);
+
   } catch (error: any) {
     console.error("🚨 Send-email API error:", error);
     return NextResponse.json(
@@ -145,10 +146,9 @@ async function sendEmailToFastAPI(
 
       return NextResponse.json({
         success: true,
-        message:
-          attachments.length > 0
-            ? "Email with images sent successfully"
-            : "Email sent successfully",
+        message: attachments.length > 0 
+          ? "Email with images sent successfully" 
+          : "Email sent successfully",
         data: responseData,
         debug: {
           method: "JSON_DIRECT_TO_FASTAPI",
