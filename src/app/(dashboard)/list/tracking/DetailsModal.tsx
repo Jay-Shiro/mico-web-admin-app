@@ -43,7 +43,25 @@ const formatDateJoined = (isoString: string | null): string => {
 export const DetailsModal: React.FC<DetailsModalProps> = ({
   delivery,
   onClose,
+  onStatusToggle,
+  deliveriesData,
+  ridersData,
+  rider,
 }) => {
+  // Helper function to safely render location data
+  const safeRenderLocation = (location: any): string => {
+    if (!location) return "";
+    if (typeof location === "string") return location;
+    if (typeof location === "object") {
+      if (location.address) return location.address;
+      if (location.latitude && location.longitude) {
+        return `${location.latitude}, ${location.longitude}`;
+      }
+      return JSON.stringify(location);
+    }
+    return String(location);
+  };
+
   // Add states for delete functionality
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -251,8 +269,8 @@ export const DetailsModal: React.FC<DetailsModalProps> = ({
           {/* Distance information in its own section */}
           <div className="bg-gray-50 rounded-lg p-4">
             <DistanceDisplay
-              from={delivery.startpoint}
-              to={delivery.endpoint}
+              from={safeRenderLocation(delivery.startpoint)}
+              to={safeRenderLocation(delivery.endpoint)}
               distance={delivery.distance}
             />
           </div>

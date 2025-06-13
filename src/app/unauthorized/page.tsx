@@ -9,7 +9,7 @@ const Unauthorized = () => {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         router.push("/");
       }
     }, 5000);
@@ -17,14 +17,13 @@ const Unauthorized = () => {
   }, [router]);
 
   const handleRedirect = () => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       router.push("/");
     }
   };
 
   return (
     <main className="relative min-h-screen bg-black flex flex-col items-center justify-center text-white px-6 font-sans text-center overflow-hidden">
-      
       {/* Starfield Background */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="w-full h-full animate-pulse-slow bg-[radial-gradient(#ffffff22_1px,transparent_1px)] [background-size:40px_40px] opacity-10"></div>

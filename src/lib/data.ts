@@ -1001,7 +1001,7 @@ export const calendarEventsData = [
     end: "2024-08-12T08:45:00",
   },
   {
-    title: "English", 
+    title: "English",
     allDay: false,
     start: "2024-08-12T09:00:00",
     end: "2024-08-12T09:45:00",
@@ -1136,12 +1136,12 @@ export const calendarEventsData = [
 
 // Helper function to convert string dates to Date objects (client-side only)
 export const getCalendarEvents = () => {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     // Return empty array on server to prevent hydration mismatch
     return [];
   }
-  
-  return calendarEventsData.map(event => ({
+
+  return calendarEventsData.map((event) => ({
     ...event,
     start: new Date(event.start),
     end: new Date(event.end),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-// import { deliveriesData } from "@/lib/data";
+import { useIsMounted } from "@/hooks/useIsMounted";
 import {
   Eye,
   Search,
@@ -54,6 +54,21 @@ const DeliveryMap = dynamic(() => import("./DeliveryMap"), {
 });
 
 const DeliveriesListPage = () => {
+  const isMounted = useIsMounted();
+
+  // Helper function to safely render location data
+  const safeRenderLocation = (location: any): string => {
+    if (!location) return "";
+    if (typeof location === "string") return location;
+    if (typeof location === "object") {
+      if (location.address) return location.address;
+      if (location.latitude && location.longitude) {
+        return `${location.latitude}, ${location.longitude}`;
+      }
+      return JSON.stringify(location);
+    }
+    return String(location);
+  };
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryType | null>(
     null
   );
@@ -132,6 +147,8 @@ const DeliveriesListPage = () => {
   }, [filteredDeliveries]);
 
   const applyFilters = useCallback(() => {
+    if (!isMounted) return; // Only apply filters after component is mounted
+
     let filtered = [...deliveriesData];
 
     // Date range filter
@@ -154,9 +171,11 @@ const DeliveriesListPage = () => {
       filtered = filtered.filter((delivery) => {
         const searchDate =
           delivery.last_updated || delivery.transaction_info.last_updated;
-        const formattedDate = new Date(searchDate).toLocaleDateString();
+        const formattedDate = isMounted
+          ? new Date(searchDate).toLocaleDateString()
+          : "";
         const searchString =
-          `${delivery._id} ${delivery.vehicletype} ${delivery.packagesize} ${delivery.startpoint} ${delivery.distance} ${delivery.status.current} ${delivery.endpoint} ${formattedDate}`.toLowerCase();
+          `${delivery._id} ${delivery.vehicletype} ${delivery.packagesize} ${safeRenderLocation(delivery.startpoint)} ${delivery.distance} ${delivery.status.current} ${safeRenderLocation(delivery.endpoint)} ${formattedDate}`.toLowerCase();
 
         return searchString.includes(searchInput.toLowerCase());
       });
@@ -179,7 +198,14 @@ const DeliveriesListPage = () => {
     }
 
     setFilteredDeliveries(filtered);
-  }, [deliveriesData, searchInput, statusFilter, vehicleFilter, dateRange]);
+  }, [
+    deliveriesData,
+    searchInput,
+    statusFilter,
+    vehicleFilter,
+    dateRange,
+    isMounted,
+  ]);
 
   useEffect(() => {
     applyFilters();
@@ -299,6 +325,8 @@ const DeliveriesListPage = () => {
 
   // Add new analytics calculations
   const analyticsData = useMemo(() => {
+    if (!isMounted) return null; // Don't calculate analytics during SSR
+
     const totalDeliveries = deliveriesData.length;
     if (totalDeliveries === 0) return null;
 
@@ -351,7 +379,7 @@ const DeliveriesListPage = () => {
       statusData,
       vehicleData,
     };
-  }, [deliveriesData]);
+  }, [deliveriesData, isMounted]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -360,15 +388,17 @@ const DeliveriesListPage = () => {
         <div className="container mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
           <div>
             <p className="text-color1 text-sm sm:text-base">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
+              {isMounted
+                ? new Date().toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : "Loading date..."}
               {" • "}
               <span className="hidden sm:inline">
-                {new Date().toLocaleTimeString("en-US")}
+                {isMounted ? new Date().toLocaleTimeString("en-US") : "--:--"}
               </span>
             </p>
           </div>
@@ -785,13 +815,13 @@ const DeliveriesListPage = () => {
                         <div className="flex items-center">
                           <FaMapMarkerAlt className="text-red-500 w-4 h-4 mr-2" />
                           <span className="text-gray-600 truncate">
-                            {delivery.startpoint}
+                            {safeRenderLocation(delivery.startpoint)}
                           </span>
                         </div>
                         <div className="flex items-center">
                           <FaMapMarkerAlt className="text-blue-500 w-4 h-4 mr-2" />
                           <span className="text-gray-600 truncate">
-                            {delivery.endpoint}
+                            {safeRenderLocation(delivery.endpoint)}
                           </span>
                         </div>
                       </div>
@@ -937,7 +967,7 @@ const DeliveriesListPage = () => {
                           <div className="flex items-center">
                             <FaMapMarkerAlt className="text-red-500 mr-2 flex-shrink-0" />
                             <span className="text-sm text-gray-600 truncate">
-                              {delivery.startpoint}
+                              {safeRenderLocation(delivery.startpoint)}
                             </span>
                           </div>
 
@@ -979,7 +1009,7 @@ const DeliveriesListPage = () => {
                           <div className="flex items-center">
                             <FaMapMarkerAlt className="text-blue-500 mr-2 flex-shrink-0" />
                             <span className="text-sm text-gray-600 truncate">
-                              {delivery.endpoint}
+                              {safeRenderLocation(delivery.endpoint)}
                             </span>
                           </div>
 
@@ -1110,13 +1140,13 @@ const DeliveriesListPage = () => {
                         <div className="flex items-center mb-1">
                           <FaMapMarkerAlt className="text-red-500 mr-2 flex-shrink-0" />
                           <span className="text-gray-600 truncate">
-                            {delivery.startpoint}
+                            {safeRenderLocation(delivery.startpoint)}
                           </span>
                         </div>
                         <div className="flex items-center">
                           <FaMapMarkerAlt className="text-blue-500 mr-2 flex-shrink-0" />
                           <span className="text-gray-600 truncate">
-                            {delivery.endpoint}
+                            {safeRenderLocation(delivery.endpoint)}
                           </span>
                         </div>
                       </div>
@@ -1132,45 +1162,67 @@ const DeliveriesListPage = () => {
                   Delivery Analytics Overview
                 </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Delivery Status Chart */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-800 mb-4">
-                      Delivery Status Distribution
-                    </h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={analyticsData?.statusData || []}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="value" fill="#001F3E" />{" "}
-                          {/* Changed to color1 */}
-                        </BarChart>
-                      </ResponsiveContainer>
+                {!isMounted ? (
+                  // Loading placeholder for SSR
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-gray-800 mb-4">
+                        Delivery Status Distribution
+                      </h3>
+                      <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
+                        <div className="text-gray-500">Loading chart...</div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-gray-800 mb-4">
+                        Vehicle Type Distribution
+                      </h3>
+                      <div className="h-64 flex items-center justify-center bg-gray-100 rounded">
+                        <div className="text-gray-500">Loading chart...</div>
+                      </div>
                     </div>
                   </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Delivery Status Chart */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-gray-800 mb-4">
+                        Delivery Status Distribution
+                      </h3>
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={analyticsData?.statusData || []}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#001F3E" />{" "}
+                            {/* Changed to color1 */}
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
 
-                  {/* Vehicle Type Distribution */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="font-medium text-gray-800 mb-4">
-                      Vehicle Type Distribution
-                    </h3>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={analyticsData?.vehicleData || []}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="value" fill="#7EA852" />{" "}
-                          {/* Changed to color2 */}
-                        </BarChart>
-                      </ResponsiveContainer>
+                    {/* Vehicle Type Distribution */}
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <h3 className="font-medium text-gray-800 mb-4">
+                        Vehicle Type Distribution
+                      </h3>
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={analyticsData?.vehicleData || []}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar dataKey="value" fill="#7EA852" />{" "}
+                            {/* Changed to color2 */}
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Metrics Cards */}
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">

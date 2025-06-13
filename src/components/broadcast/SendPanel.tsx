@@ -42,65 +42,98 @@ export default function SendPanel({
     // Replace all occurrences of {parameter} with actual value
     Object.keys(recipient).forEach((key) => {
       const regex = new RegExp(`{${key}}`, "g");
-      result = result.replace(regex, recipient[key] || `{${key}}`);
+      const value = recipient[key];
+
+      // Handle different types of values safely
+      let replacementValue = `{${key}}`; // fallback
+
+      if (value === null || value === undefined) {
+        replacementValue = "";
+      } else if (typeof value === "object") {
+        // If it's an object, convert to readable string
+        if (value.address) {
+          // Handle address objects
+          replacementValue = value.address;
+        } else if (value.latitude && value.longitude) {
+          // Handle coordinate objects
+          replacementValue = `${value.latitude}, ${value.longitude}`;
+        } else {
+          // For other objects, try to JSON stringify or use toString
+          try {
+            replacementValue = JSON.stringify(value);
+          } catch {
+            replacementValue = String(value);
+          }
+        }
+      } else {
+        // For primitive values, convert to string
+        replacementValue = String(value);
+      }
+
+      result = result.replace(regex, replacementValue);
     });
 
     return result;
   };
 
   // Function to compress images to reduce size
-  const compressImage = (file: File, maxSizeKB: number = 150): Promise<File> => {
+  const compressImage = (
+    file: File,
+    maxSizeKB: number = 150
+  ): Promise<File> => {
     return new Promise((resolve) => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
       const img = new Image();
-      
+
       img.onload = () => {
         // Calculate new dimensions (max 800x600)
         let { width, height } = img;
         const maxWidth = 800;
         const maxHeight = 600;
-        
+
         if (width > maxWidth || height > maxHeight) {
           const ratio = Math.min(maxWidth / width, maxHeight / height);
           width *= ratio;
           height *= ratio;
         }
-        
+
         canvas.width = width;
         canvas.height = height;
-        
+
         // Draw and compress
         ctx?.drawImage(img, 0, 0, width, height);
-        
+
         // Start with high quality and reduce if needed
         let quality = 0.9;
         const tryCompress = () => {
-          canvas.toBlob((blob) => {
-            if (blob) {
-              const compressedSize = blob.size / 1024; // KB
-              if (compressedSize <= maxSizeKB || quality <= 0.1) {
-                // Create new file with compressed data
-                const compressedFile = new File(
-                  [blob], 
-                  file.name, 
-                  { type: 'image/jpeg' }
-                );
-                resolve(compressedFile);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedSize = blob.size / 1024; // KB
+                if (compressedSize <= maxSizeKB || quality <= 0.1) {
+                  // Create new file with compressed data
+                  const compressedFile = new File([blob], file.name, {
+                    type: "image/jpeg",
+                  });
+                  resolve(compressedFile);
+                } else {
+                  // Reduce quality and try again
+                  quality -= 0.1;
+                  tryCompress();
+                }
               } else {
-                // Reduce quality and try again
-                quality -= 0.1;
-                tryCompress();
+                resolve(file); // Fallback to original
               }
-            } else {
-              resolve(file); // Fallback to original
-            }
-          }, 'image/jpeg', quality);
+            },
+            "image/jpeg",
+            quality
+          );
         };
-        
+
         tryCompress();
       };
-      
+
       img.src = URL.createObjectURL(file);
     });
   };
@@ -118,21 +151,25 @@ export default function SendPanel({
       };
 
       // Determine which images to use (prioritize selectedImages, fallback to selectedImage)
-      const imagesToProcess = selectedImages && selectedImages.length > 0 
-        ? selectedImages 
-        : selectedImage 
-        ? [selectedImage] 
-        : [];
+      const imagesToProcess =
+        selectedImages && selectedImages.length > 0
+          ? selectedImages
+          : selectedImage
+          ? [selectedImage]
+          : [];
 
       // Compress images if any exist
       let compressedImages: File[] = [];
       if (imagesToProcess.length > 0) {
         try {
           compressedImages = await Promise.all(
-            imagesToProcess.map(img => compressImage(img, 150)) // 150KB max per image
+            imagesToProcess.map((img) => compressImage(img, 150)) // 150KB max per image
           );
         } catch (compressionError) {
-          console.warn('Image compression failed, using originals:', compressionError);
+          console.warn(
+            "Image compression failed, using originals:",
+            compressionError
+          );
           compressedImages = imagesToProcess;
         }
       }
@@ -240,21 +277,25 @@ export default function SendPanel({
       };
 
       // Determine which images to use (prioritize selectedImages, fallback to selectedImage)
-      const imagesToProcess = selectedImages && selectedImages.length > 0 
-        ? selectedImages 
-        : selectedImage 
-        ? [selectedImage] 
-        : [];
+      const imagesToProcess =
+        selectedImages && selectedImages.length > 0
+          ? selectedImages
+          : selectedImage
+          ? [selectedImage]
+          : [];
 
       // Compress images if any exist
       let compressedImages: File[] = [];
       if (imagesToProcess.length > 0) {
         try {
           compressedImages = await Promise.all(
-            imagesToProcess.map(img => compressImage(img, 150))
+            imagesToProcess.map((img) => compressImage(img, 150))
           );
         } catch (compressionError) {
-          console.warn('Image compression failed during retry, using originals:', compressionError);
+          console.warn(
+            "Image compression failed during retry, using originals:",
+            compressionError
+          );
           compressedImages = imagesToProcess;
         }
       }
@@ -438,12 +479,15 @@ export default function SendPanel({
                   <div className="text-gray-500 mb-1">Attachments</div>
                   <div className="font-medium">
                     {(() => {
-                      const totalImages = selectedImages && selectedImages.length > 0 
-                        ? selectedImages.length 
-                        : selectedImage 
-                        ? 1 
-                        : 0;
-                      return totalImages > 0 ? `${totalImages} image(s)` : "None";
+                      const totalImages =
+                        selectedImages && selectedImages.length > 0
+                          ? selectedImages.length
+                          : selectedImage
+                          ? 1
+                          : 0;
+                      return totalImages > 0
+                        ? `${totalImages} image(s)`
+                        : "None";
                     })()}
                   </div>
                 </div>
@@ -634,7 +678,6 @@ export default function SendPanel({
                 />
               </svg>
             </motion.div>
-
             <motion.h3
               className="text-2xl font-bold text-color1 mb-2 text-center"
               initial={{ opacity: 0, y: 20 }}
@@ -643,7 +686,6 @@ export default function SendPanel({
             >
               Broadcast Sent Successfully!
             </motion.h3>
-
             <motion.p
               className="text-gray-600 mb-4 text-center max-w-md"
               initial={{ opacity: 0, y: 20 }}
@@ -655,7 +697,6 @@ export default function SendPanel({
               {selectedRecipients[0]?.type === "rider" ? "rider" : "customer"}
               {selectedRecipients.length !== 1 ? "s" : ""}.
             </motion.p>
-
             {results?.failed && results.failed.length > 0 && (
               <motion.div
                 className="mb-4 w-full max-w-md bg-red-50 p-3 rounded-lg"
@@ -678,57 +719,56 @@ export default function SendPanel({
                 </ul>
               </motion.div>
             )}
+            {/* Confetti Animation */}{" "}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 0] }}
+              transition={{ duration: 2 }}
+            >
+              {Array.from({ length: 100 }).map((_, i) => {
+                // Use deterministic values based on index to prevent hydration mismatches
+                const leftPercent = (i * 7) % 100;
+                const topPercent = 10 + ((i * 13) % 30);
+                const scale = ((i % 5) + 1) * 0.4 + 0.5;
+                const duration = ((i % 3) + 1) * 0.5 + 1;
+                const delay = (i % 10) * 0.05;
 
-            {/* Confetti Animation */}          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 2 }}
-          >
-            {Array.from({ length: 100 }).map((_, i) => {
-              // Use deterministic values based on index to prevent hydration mismatches
-              const leftPercent = (i * 7) % 100;
-              const topPercent = 10 + ((i * 13) % 30);
-              const scale = ((i % 5) + 1) * 0.4 + 0.5;
-              const duration = ((i % 3) + 1) * 0.5 + 1;
-              const delay = (i % 10) * 0.05;
-              
-              return (
-                <motion.div
-                  key={i}
-                  className="absolute w-2 h-2 rounded-full"
-                  style={{
-                    left: `${leftPercent}%`,
-                    backgroundColor:
-                      i % 5 === 0
-                        ? "#7EA852"
-                        : i % 5 === 1
-                        ? "#FAE27C"
-                        : i % 5 === 2
-                        ? "#DBE64C"
-                        : i % 5 === 3
-                        ? "#001F3E"
-                        : "#A4C3A2",
-                  }}
-                  initial={{
-                    top: "50%",
-                    scale: 0,
-                    opacity: 1,
-                  }}
-                  animate={{
-                    top: `${topPercent}%`,
-                    scale: scale,
-                    opacity: [1, 0],
-                  }}
-                  transition={{
-                    duration: duration,
-                    delay: delay,
-                  }}
-                />
-              );
-            })}
-          </motion.div>
-
+                return (
+                  <motion.div
+                    key={i}
+                    className="absolute w-2 h-2 rounded-full"
+                    style={{
+                      left: `${leftPercent}%`,
+                      backgroundColor:
+                        i % 5 === 0
+                          ? "#7EA852"
+                          : i % 5 === 1
+                          ? "#FAE27C"
+                          : i % 5 === 2
+                          ? "#DBE64C"
+                          : i % 5 === 3
+                          ? "#001F3E"
+                          : "#A4C3A2",
+                    }}
+                    initial={{
+                      top: "50%",
+                      scale: 0,
+                      opacity: 1,
+                    }}
+                    animate={{
+                      top: `${topPercent}%`,
+                      scale: scale,
+                      opacity: [1, 0],
+                    }}
+                    transition={{
+                      duration: duration,
+                      delay: delay,
+                    }}
+                  />
+                );
+              })}
+            </motion.div>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl mb-8">
               <motion.div
@@ -767,15 +807,16 @@ export default function SendPanel({
                 transition={{ delay: 0.6 }}
               >
                 <div className="text-3xl font-bold text-color1">
-                  {isMounted ? new Date().toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  }) : "--:--"}
+                  {isMounted
+                    ? new Date().toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "--:--"}
                 </div>
                 <div className="text-sm text-gray-600">Sent At</div>
               </motion.div>
             </div>
-
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4">
               <motion.button
@@ -789,7 +830,7 @@ export default function SendPanel({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
                 onClick={() => {
-                  if (typeof window !== 'undefined') {
+                  if (typeof window !== "undefined") {
                     window.location.reload();
                   }
                 }}
@@ -825,7 +866,7 @@ export default function SendPanel({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 }}
                   onClick={() => {
-                    if (typeof window !== 'undefined') {
+                    if (typeof window !== "undefined") {
                       window.location.href = "/admin";
                     }
                   }}

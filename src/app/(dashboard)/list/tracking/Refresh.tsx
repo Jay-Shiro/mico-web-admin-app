@@ -35,8 +35,8 @@ export const Refresh: React.FC<RefreshProps> = ({ onRefresh }) => {
   const handleTouchMove = useCallback(
     (e: TouchEvent) => {
       // Only proceed if mounted and window is available
-      if (!mounted || typeof window === 'undefined') return;
-      
+      if (!mounted || typeof window === "undefined") return;
+
       if (window.scrollY > 0) return;
 
       const touchY = e.touches[0].screenY;
@@ -60,7 +60,7 @@ export const Refresh: React.FC<RefreshProps> = ({ onRefresh }) => {
 
   useEffect(() => {
     // Only add event listeners if mounted and window is available
-    if (!mounted || typeof window === 'undefined') return;
+    if (!mounted || typeof window === "undefined") return;
 
     window.addEventListener("touchstart", handleTouchStart);
     window.addEventListener("touchmove", handleTouchMove);

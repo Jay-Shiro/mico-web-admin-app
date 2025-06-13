@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DeliveryType } from "./deliveryType";
 import { Loader } from "@googlemaps/js-api-loader";
+import { useIsMounted } from "@/hooks/useIsMounted";
 
 interface DeliveryMapProps {
   deliveries: DeliveryType[];
   onDeliveryClick?: (delivery: DeliveryType) => void;
-  trackingDeliveryId?: string | null; // Add this prop
+  trackingDeliveryId?: string | null;
 }
 
 interface LocationData {
@@ -21,6 +22,7 @@ const DeliveryMap = ({
   onDeliveryClick,
   trackingDeliveryId,
 }: DeliveryMapProps) => {
+  const isMounted = useIsMounted();
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
@@ -30,6 +32,20 @@ const DeliveryMap = ({
   const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(
     null
   );
+
+  // Helper function to safely render location data
+  const safeRenderLocation = (location: any): string => {
+    if (!location) return "";
+    if (typeof location === "string") return location;
+    if (typeof location === "object") {
+      if (location.address) return location.address;
+      if (location.latitude && location.longitude) {
+        return `${location.latitude}, ${location.longitude}`;
+      }
+      return JSON.stringify(location);
+    }
+    return String(location);
+  };
 
   useEffect(() => {
     const loader = new Loader({
@@ -53,7 +69,7 @@ const DeliveryMap = ({
           zoomControl: true,
           zoomControlOptions: {
             position:
-              typeof window !== 'undefined' && window.innerWidth < 768
+              typeof window !== "undefined" && window.innerWidth < 768
                 ? google.maps.ControlPosition.RIGHT_BOTTOM
                 : google.maps.ControlPosition.RIGHT_CENTER,
           },
@@ -74,7 +90,7 @@ const DeliveryMap = ({
 
         // Add resize listener to adjust control positions
         const resizeListener = () => {
-          if (typeof window !== 'undefined') {
+          if (typeof window !== "undefined") {
             map.setOptions({
               zoomControlOptions: {
                 position:
@@ -85,7 +101,7 @@ const DeliveryMap = ({
             });
           }
         };
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           window.addEventListener("resize", resizeListener);
           return () => window.removeEventListener("resize", resizeListener);
         }
@@ -93,25 +109,28 @@ const DeliveryMap = ({
     });
   }, []);
 
-  const focusDelivery = useCallback((delivery: DeliveryType, location: LocationData) => {
-    if (!map) return;
+  const focusDelivery = useCallback(
+    (delivery: DeliveryType, location: LocationData) => {
+      if (!map) return;
 
-    const position = { lat: location.latitude, lng: location.longitude };
-    map.panTo(position);
-    map.setZoom(15);
+      const position = { lat: location.latitude, lng: location.longitude };
+      map.panTo(position);
+      map.setZoom(15);
 
-    if (activeInfoWindow) {
-      activeInfoWindow.close();
-    }
-
-    markers.forEach((marker) => {
-      if (marker.get("deliveryId") === delivery._id) {
-        google.maps.event.trigger(marker, "click");
+      if (activeInfoWindow) {
+        activeInfoWindow.close();
       }
-    });
 
-    setSelectedDeliveryId(delivery._id);
-  }, [map, activeInfoWindow, markers]);
+      markers.forEach((marker) => {
+        if (marker.get("deliveryId") === delivery._id) {
+          google.maps.event.trigger(marker, "click");
+        }
+      });
+
+      setSelectedDeliveryId(delivery._id);
+    },
+    [map, activeInfoWindow, markers]
+  );
 
   useEffect(() => {
     if (!map || !deliveries.length) return;
@@ -136,7 +155,20 @@ const DeliveryMap = ({
           if (response.status === 404) continue;
           if (!response.ok || !data.location_data) continue;
 
-          const location: LocationData = data.location_data;
+          // Safely extract location data to prevent serialization issues
+          const locationData = data.location_data;
+          const location: LocationData = {
+            latitude: Number(locationData.latitude),
+            longitude: Number(locationData.longitude),
+            last_updated: String(locationData.last_updated),
+            eta_minutes: locationData.eta_minutes
+              ? Number(locationData.eta_minutes)
+              : null,
+            eta_time: locationData.eta_time
+              ? String(locationData.eta_time)
+              : null,
+          };
+
           const position = { lat: location.latitude, lng: location.longitude };
 
           const marker = new google.maps.Marker({
@@ -167,10 +199,10 @@ const DeliveryMap = ({
                     delivery.status.current
                   }</span></p>
                   <p><strong>From:</strong> <span class="ml-1 break-words">${
-                    delivery.startpoint
+                    safeRenderLocation(delivery.startpoint)
                   }</span></p>
                   <p><strong>To:</strong> <span class="ml-1 break-words">${
-                    delivery.endpoint
+                    safeRenderLocation(delivery.endpoint)
                   }</span></p>
                   <p><strong>Last Update:</strong> <span class="ml-1">${new Date(
                     location.last_updated
@@ -236,7 +268,16 @@ const DeliveryMap = ({
       clearInterval(intervalId);
       newMarkers.forEach((marker) => marker.setMap(null));
     };
-  }, [map, deliveries, selectedDeliveryId, trackingDeliveryId, activeInfoWindow, focusDelivery, markers, onDeliveryClick]);
+  }, [
+    map,
+    deliveries,
+    selectedDeliveryId,
+    trackingDeliveryId,
+    activeInfoWindow,
+    focusDelivery,
+    markers,
+    onDeliveryClick,
+  ]);
 
   return (
     <div className="relative w-full h-[50vh] md:h-[400px] bg-gray-100 rounded-lg overflow-hidden">

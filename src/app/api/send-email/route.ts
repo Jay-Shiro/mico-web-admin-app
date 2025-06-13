@@ -5,7 +5,7 @@ const BASE_URL = process.env.NEXT_API_BASE_URL;
 
 /**
  * Email sending API route with Vercel-optimized multipart form handling
- * 
+ *
  * Key improvements for production deployment:
  * - Uses formdata-node instead of native FormData for better Vercel compatibility
  * - Proper multipart boundary generation that FastAPI can parse correctly
@@ -75,7 +75,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create FormData using formdata-node for better Vercel compatibility with FastAPI
-    console.log("📤 Using formdata-node for better multipart compatibility on Vercel...");
+    console.log(
+      "📤 Using formdata-node for better multipart compatibility on Vercel..."
+    );
     const fastApiFormData = new NodeFormData();
     fastApiFormData.append("email", email);
     fastApiFormData.append("subject", subject);
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
 
             // Convert file to ArrayBuffer for NodeFile compatibility
             const arrayBuffer = await image.arrayBuffer();
-            
+
             // Create NodeFile for better compatibility with FastAPI
             const nodeFile = new NodeFile([arrayBuffer], fileName, {
               type: fileType,
@@ -190,9 +192,15 @@ export async function POST(request: NextRequest) {
               type: image.type || "image/jpeg",
             });
             retryFormData.append("image", nodeFile);
-            console.log(`📎 Retry - Added original image ${index}:`, image.name);
+            console.log(
+              `📎 Retry - Added original image ${index}:`,
+              image.name
+            );
           } catch (retryError) {
-            console.error(`❌ Error processing retry image ${index}:`, retryError);
+            console.error(
+              `❌ Error processing retry image ${index}:`,
+              retryError
+            );
           }
         }
       }
