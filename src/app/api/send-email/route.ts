@@ -69,13 +69,15 @@ export async function POST(request: NextRequest) {
 
     // PRODUCTION STRATEGY: Use JSON with base64 images for reliability
     if (process.env.NODE_ENV === "production") {
-      console.log("🚀 PRODUCTION MODE: Using JSON with base64 for FastAPI compatibility");
+      console.log(
+        "🚀 PRODUCTION MODE: Using JSON with base64 for FastAPI compatibility"
+      );
       console.log("📋 Production email details:", {
         hasImages,
         imageCount: images.length,
-        approach: "JSON_BASE64_PRODUCTION"
+        approach: "JSON_BASE64_PRODUCTION",
       });
-      
+
       if (hasImages) {
         console.log("📎 Production: Using JSON with base64 images");
         return await sendEmailViaJsonWithBase64(email, subject, body, images);
@@ -116,12 +118,14 @@ async function sendEmailViaJsonTextOnly(
   try {
     console.log("📤 PRODUCTION: Sending text-only email via JSON...");
 
-    // Create JSON payload for text-only email
+    // Create JSON payload for text-only email (matching FastAPI format)
     const jsonPayload = {
-      email: email,
-      subject: subject,
-      body: body,
-      attachments: [] // Empty attachments array
+      json_data: {
+        email: email,
+        subject: subject,
+        body: body,
+        attachments: [], // Empty attachments array
+      },
     };
 
     const controller = new AbortController();
@@ -171,8 +175,12 @@ async function sendEmailViaJsonTextOnly(
           },
         });
       } else {
-        console.log("❌ FastAPI error with JSON text-only:", response.status, responseText);
-        
+        console.log(
+          "❌ FastAPI error with JSON text-only:",
+          response.status,
+          responseText
+        );
+
         // FALLBACK: Try URL-encoded as backup
         console.log("🔄 FALLBACK: JSON failed, trying URL-encoded...");
         return await sendEmailViaUrlEncoded(email, subject, body);
@@ -186,12 +194,14 @@ async function sendEmailViaJsonTextOnly(
       }
 
       // FALLBACK: Try URL-encoded
-      console.log("🔄 FALLBACK: Network error with JSON, trying URL-encoded...");
+      console.log(
+        "🔄 FALLBACK: Network error with JSON, trying URL-encoded..."
+      );
       return await sendEmailViaUrlEncoded(email, subject, body);
     }
   } catch (error: any) {
     console.error("🚨 JSON text-only processing error:", error);
-    
+
     // FALLBACK: Try URL-encoded
     console.log("🔄 FALLBACK: JSON processing error, trying URL-encoded...");
     return await sendEmailViaUrlEncoded(email, subject, body);
@@ -208,7 +218,9 @@ async function sendEmailViaProductionFormData(
   images: File[]
 ) {
   try {
-    console.log("📤 PRODUCTION: Using native FormData (same as development - known to work)");
+    console.log(
+      "📤 PRODUCTION: Using native FormData (same as development - known to work)"
+    );
 
     // Use NATIVE FormData just like development (which works perfectly)
     const productionFormData = new FormData();
@@ -217,8 +229,10 @@ async function sendEmailViaProductionFormData(
     productionFormData.append("body", body);
 
     // Add images exactly like development does
-    const hasImages = images.length > 0 && images.some((img) => img instanceof File && img.size > 0);
-    
+    const hasImages =
+      images.length > 0 &&
+      images.some((img) => img instanceof File && img.size > 0);
+
     if (hasImages) {
       console.log("📎 Adding images to production FormData...");
       for (let index = 0; index < images.length; index++) {
@@ -279,8 +293,8 @@ async function sendEmailViaProductionFormData(
 
         return NextResponse.json({
           success: true,
-          message: hasImages 
-            ? "Email with images sent successfully" 
+          message: hasImages
+            ? "Email with images sent successfully"
             : "Email sent successfully",
           data: responseData,
           debug: {
@@ -363,20 +377,23 @@ async function sendEmailViaJsonWithBase64(
       }
     }
 
-    // Create JSON payload
+    // Create JSON payload that matches FastAPI's expected format
     const jsonPayload = {
-      email: email,
-      subject: subject,
-      body: body,
-      attachments: attachments,
+      json_data: {
+        email: email,
+        subject: subject,
+        body: body,
+        attachments: attachments,
+      },
     };
 
-    console.log("📤 Sending JSON payload with base64 images to FastAPI...");
+    console.log("📤 Sending JSON payload with json_data wrapper to FastAPI...");
     console.log("📋 Payload info:", {
       email: email,
       subject: subject,
       bodyLength: body.length,
       attachmentCount: attachments.length,
+      format: "json_data_wrapper",
     });
 
     const controller = new AbortController();
