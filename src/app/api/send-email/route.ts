@@ -5,9 +5,9 @@ const BASE_URL = process.env.NEXT_API_BASE_URL;
 /**
  * PRODUCTION-READY EMAIL API ROUTE WITH IMAGE SUPPORT
  *
- * This version now uses the same native FormData approach for both production and development:
- * - Uses URL-encoded for text-only emails (proven reliable)
- * - Uses native FormData for image emails (same as development - works perfectly)
+ * This version uses JSON with base64 images for both production and development:
+ * - Uses JSON format for all requests (universal compatibility)
+ * - Converts images to base64 for reliable transmission
  * - Comprehensive logging and error handling
  * - Fallback mechanisms to ensure delivery
  */
@@ -67,29 +67,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // PRODUCTION STRATEGY: Use JSON with base64 images for reliability
-    if (process.env.NODE_ENV === "production") {
-      console.log(
-        "🚀 PRODUCTION MODE: Using JSON with base64 for FastAPI compatibility"
-      );
-      console.log("📋 Production email details:", {
-        hasImages,
-        imageCount: images.length,
-        approach: "JSON_BASE64_PRODUCTION",
-      });
+    // UNIVERSAL STRATEGY: Use JSON with base64 images for both production AND development
+    console.log(
+      "🚀 UNIVERSAL MODE: Using JSON with base64 for FastAPI compatibility (both prod & dev)"
+    );
+    console.log("📋 Email details:", {
+      hasImages,
+      imageCount: images.length,
+      approach: "JSON_BASE64_UNIVERSAL",
+      environment: process.env.NODE_ENV,
+    });
 
-      if (hasImages) {
-        console.log("📎 Production: Using JSON with base64 images");
-        return await sendEmailViaJsonWithBase64(email, subject, body, images);
-      } else {
-        console.log("📝 Production: Using JSON for text-only email");
-        return await sendEmailViaJsonTextOnly(email, subject, body);
-      }
+    if (hasImages) {
+      console.log("📎 Using JSON with base64 images");
+      return await sendEmailViaJsonWithBase64(email, subject, body, images);
+    } else {
+      console.log("📝 Using JSON for text-only email");
+      return await sendEmailViaJsonTextOnly(email, subject, body);
     }
-
-    // DEVELOPMENT MODE: Use FormData with images as before
-    console.log("🛠️ DEVELOPMENT MODE: Using FormData with images");
-    return await sendEmailViaDevelopmentFormData(email, subject, body, images);
   } catch (error: any) {
     console.error("🚨 Send-email API error:", error);
     return NextResponse.json(
@@ -108,7 +103,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Production JSON email sending for text-only emails
+ * Universal JSON email sending for text-only emails (works in both production and development)
  */
 async function sendEmailViaJsonTextOnly(
   email: string,
@@ -116,7 +111,7 @@ async function sendEmailViaJsonTextOnly(
   body: string
 ) {
   try {
-    console.log("📤 PRODUCTION: Sending text-only email via JSON...");
+    console.log("📤 UNIVERSAL: Sending text-only email via JSON...");
 
     // Create JSON payload for text-only email (matching FastAPI format)
     const jsonPayload = {
@@ -170,8 +165,9 @@ async function sendEmailViaJsonTextOnly(
           message: "Email sent successfully",
           data: responseData,
           debug: {
-            method: "JSON_TEXT_ONLY_PRODUCTION",
+            method: "JSON_TEXT_ONLY_UNIVERSAL",
             payloadSize: JSON.stringify(jsonPayload).length,
+            environment: process.env.NODE_ENV,
           },
         });
       } else {
@@ -337,7 +333,7 @@ async function sendEmailViaProductionFormData(
 }
 
 /**
- * Production JSON email sending with base64 images (most reliable for Vercel)
+ * Universal JSON email sending with base64 images (most reliable for all environments)
  */
 async function sendEmailViaJsonWithBase64(
   email: string,
@@ -347,7 +343,7 @@ async function sendEmailViaJsonWithBase64(
 ) {
   try {
     console.log(
-      "📤 PRODUCTION: Converting images to base64 for JSON payload..."
+      "📤 UNIVERSAL: Converting images to base64 for JSON payload..."
     );
 
     // Convert images to base64 attachments
@@ -438,9 +434,10 @@ async function sendEmailViaJsonWithBase64(
           message: "Email with images sent successfully",
           data: responseData,
           debug: {
-            method: "JSON_BASE64_PRODUCTION",
+            method: "JSON_BASE64_UNIVERSAL",
             imageCount: attachments.length,
             payloadSize: JSON.stringify(jsonPayload).length,
+            environment: process.env.NODE_ENV,
           },
         });
       } else {
