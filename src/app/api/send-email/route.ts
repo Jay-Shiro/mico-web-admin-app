@@ -359,6 +359,13 @@ async function sendEmailViaJsonWithBase64(
           const arrayBuffer = await image.arrayBuffer();
           const base64 = Buffer.from(arrayBuffer).toString("base64");
 
+          // Verify base64 conversion
+          console.log(`🔍 Base64 conversion for ${image.name}:`, {
+            originalSize: image.size,
+            base64Length: base64.length,
+            base64Preview: base64.substring(0, 50) + "..."
+          });
+
           attachments.push({
             filename: image.name || `image_${i}.jpg`,
             content: base64,
@@ -390,7 +397,19 @@ async function sendEmailViaJsonWithBase64(
       bodyLength: body.length,
       attachmentCount: attachments.length,
       format: "json_data_wrapper",
+      attachmentDetails: attachments.map(att => ({
+        filename: att.filename,
+        type: att.type,
+        contentLength: att.content.length,
+        disposition: att.disposition
+      }))
     });
+
+    // Log first few characters of base64 for debugging
+    if (attachments.length > 0) {
+      console.log("🔍 DEBUGGING: First attachment base64 preview:", 
+        attachments[0].content.substring(0, 50) + "...");
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
