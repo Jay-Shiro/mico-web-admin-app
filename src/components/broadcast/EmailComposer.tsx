@@ -54,6 +54,8 @@ type EmailComposerProps = {
   onContinue: () => void;
   selectedImage: File | null;
   setSelectedImage: (image: File | null) => void;
+  selectedImages?: File[]; // Optional for backward compatibility
+  setSelectedImages?: (images: File[]) => void; // Optional for backward compatibility
 };
 
 export default function EmailComposer({
@@ -65,6 +67,8 @@ export default function EmailComposer({
   onContinue,
   selectedImage,
   setSelectedImage,
+  selectedImages = [],
+  setSelectedImages = () => {},
 }: EmailComposerProps) {
   const [showTemplates, setShowTemplates] = useState(false);
   const [showParameters, setShowParameters] = useState(false);
@@ -96,17 +100,7 @@ export default function EmailComposer({
       return () => URL.revokeObjectURL(objectUrl);
     } else {
       setImagePreview(null);
-      // Also clean up any blob URLs in the editor content when image is removed
-      if (editorRef.current) {
-        const content = editorRef.current.getContent();
-        const cleanedContent = content.replace(
-          /<img[^>]*data-image-placeholder="true"[^>]*>/g,
-          ""
-        );
-        if (cleanedContent !== content) {
-          editorRef.current.setContent(cleanedContent);
-        }
-      }
+      // No need to clean up editor content since images are not inserted into the editor
     }
   }, [selectedImage]);
 
@@ -137,27 +131,15 @@ export default function EmailComposer({
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImage(file);
-      // Insert a placeholder that will be replaced with CID reference during email sending
-      if (editorRef.current) {
-        const objectUrl = URL.createObjectURL(file);
-        const imgTag = `<img src="${objectUrl}" alt="Attachment" style="max-width:100%;border-radius:8px;margin:8px 0;" data-image-placeholder="true" />`;
-        editorRef.current.insertContent(imgTag);
-      }
+      // Don't insert image into editor - backend will handle image rendering
+      // This prevents duplicacy since the image will be embedded when the email is sent
     }
   };
 
   const handleRemoveImage = () => {
     setSelectedImage(null);
-    // Remove the image from the editor content
-    if (editorRef.current) {
-      const content = editorRef.current.getContent();
-      // Remove images with data-image-placeholder attribute
-      const updatedContent = content.replace(
-        /<img[^>]*data-image-placeholder="true"[^>]*>/g,
-        ""
-      );
-      editorRef.current.setContent(updatedContent);
-    }
+    // No need to clean up editor content since images are not inserted into the editor
+    // The backend handles image embedding separately from the message content
   };
 
   // Get recipient type to show appropriate parameters
@@ -263,127 +245,49 @@ export default function EmailComposer({
             </motion.label>
           </div>
 
-          {/* Enhanced Image Preview */}
-          {imagePreview && (
+          {/* Clean Image Status */}
+          {selectedImage && (
             <motion.div
-              className="mt-6 p-6 bg-gradient-to-br from-color3lite via-white to-color3lite/50 rounded-2xl border-2 border-color3/30 shadow-xl"
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="mt-4 p-4 bg-gradient-to-br from-color3lite via-white to-color3lite/50 rounded-xl border border-color3/30"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <div className="flex items-start gap-6">
-                {/* Image with Enhanced Styling */}
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-tr from-color2/20 to-color4/20 rounded-xl blur-sm group-hover:blur-none transition-all duration-300" />
-                  <Image
-                    src={imagePreview}
-                    alt="Preview"
-                    width={320}
-                    height={160}
-                    className="relative max-h-40 rounded-xl border-3 border-white object-contain shadow-2xl group-hover:scale-105 transition-transform duration-300"
-                    unoptimized
-                  />
-                  {/* Image Frame Effect */}
-                  <div className="absolute inset-0 rounded-xl ring-2 ring-color2/20 ring-offset-2 ring-offset-white/50" />
-                </div>
-
-                {/* Enhanced Info Section */}
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-                    <p className="text-lg font-bold text-color1">
-                      Image Attached
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <svg
-                        className="w-4 h-4 text-color2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span className="font-medium text-color1">
-                        {selectedImage?.name}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm">
-                      <svg
-                        className="w-4 h-4 text-color2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z"
-                        />
-                      </svg>
-                      <span className="text-color1/80">
-                        {selectedImage
-                          ? (selectedImage.size / 1024).toFixed(1)
-                          : 0}{" "}
-                        KB
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm">
-                      <svg
-                        className="w-4 h-4 text-color2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="text-green-600 font-medium">
-                        Ready for inline embedding
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Enhanced Remove Button */}
-                  <motion.button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
-                    whileHover={{ scale: 1.05, y: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <motion.svg
-                      className="w-4 h-4"
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-color2/20 rounded-full flex items-center justify-center">
+                    <svg
+                      className="w-4 h-4 text-color2"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
-                      whileHover={{ rotate: 180 }}
-                      transition={{ duration: 0.3 }}
                     >
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
-                    </motion.svg>
-                    Remove Image
-                  </motion.button>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-color1">
+                      Image will be embedded in email
+                    </p>
+                    <p className="text-xs text-color1/70">
+                      {selectedImage.name} ({(selectedImage.size / 1024).toFixed(1)} KB)
+                    </p>
+                  </div>
                 </div>
+                <motion.button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  className="px-3 py-1.5 text-xs bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Remove
+                </motion.button>
               </div>
             </motion.div>
           )}

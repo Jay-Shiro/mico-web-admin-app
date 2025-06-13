@@ -12,6 +12,7 @@ type SendPanelProps = {
   selectedRecipients: any[];
   onBack: () => void;
   selectedImage?: File | null;
+  selectedImages?: File[]; // Support for multiple images
 };
 
 export default function SendPanel({
@@ -19,6 +20,7 @@ export default function SendPanel({
   selectedRecipients,
   onBack,
   selectedImage,
+  selectedImages = [],
 }: SendPanelProps) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -44,6 +46,63 @@ export default function SendPanel({
     return result;
   };
 
+  // Function to compress images to reduce size
+  const compressImage = (file: File, maxSizeKB: number = 150): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions (max 800x600)
+        let { width, height } = img;
+        const maxWidth = 800;
+        const maxHeight = 600;
+        
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width *= ratio;
+          height *= ratio;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw and compress
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Start with high quality and reduce if needed
+        let quality = 0.9;
+        const tryCompress = () => {
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedSize = blob.size / 1024; // KB
+              if (compressedSize <= maxSizeKB || quality <= 0.1) {
+                // Create new file with compressed data
+                const compressedFile = new File(
+                  [blob], 
+                  file.name, 
+                  { type: 'image/jpeg' }
+                );
+                resolve(compressedFile);
+              } else {
+                // Reduce quality and try again
+                quality -= 0.1;
+                tryCompress();
+              }
+            } else {
+              resolve(file); // Fallback to original
+            }
+          }, 'image/jpeg', quality);
+        };
+        
+        tryCompress();
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleSend = async () => {
     try {
       setError(null);
@@ -55,6 +114,26 @@ export default function SendPanel({
         failed: [] as { email: string; reason: string }[],
         total: selectedRecipients.length,
       };
+
+      // Determine which images to use (prioritize selectedImages, fallback to selectedImage)
+      const imagesToProcess = selectedImages && selectedImages.length > 0 
+        ? selectedImages 
+        : selectedImage 
+        ? [selectedImage] 
+        : [];
+
+      // Compress images if any exist
+      let compressedImages: File[] = [];
+      if (imagesToProcess.length > 0) {
+        try {
+          compressedImages = await Promise.all(
+            imagesToProcess.map(img => compressImage(img, 150)) // 150KB max per image
+          );
+        } catch (compressionError) {
+          console.warn('Image compression failed, using originals:', compressionError);
+          compressedImages = imagesToProcess;
+        }
+      }
 
       // Send emails one by one to match our new API structure
       for (let i = 0; i < selectedRecipients.length; i++) {
@@ -77,10 +156,10 @@ export default function SendPanel({
           formData.append("subject", personalizedSubject);
           formData.append("body", personalizedBody);
 
-          // Add image if provided
-          if (selectedImage) {
-            formData.append("image", selectedImage);
-          }
+          // Add all compressed images if provided
+          compressedImages.forEach((image) => {
+            formData.append("image", image, image.name);
+          });
 
           // Send individual email with timeout
           const controller = new AbortController();
@@ -158,6 +237,26 @@ export default function SendPanel({
         total: results.failed.length,
       };
 
+      // Determine which images to use (prioritize selectedImages, fallback to selectedImage)
+      const imagesToProcess = selectedImages && selectedImages.length > 0 
+        ? selectedImages 
+        : selectedImage 
+        ? [selectedImage] 
+        : [];
+
+      // Compress images if any exist
+      let compressedImages: File[] = [];
+      if (imagesToProcess.length > 0) {
+        try {
+          compressedImages = await Promise.all(
+            imagesToProcess.map(img => compressImage(img, 150))
+          );
+        } catch (compressionError) {
+          console.warn('Image compression failed during retry, using originals:', compressionError);
+          compressedImages = imagesToProcess;
+        }
+      }
+
       // Retry sending failed emails one by one
       for (let i = 0; i < results.failed.length; i++) {
         const failedItem = results.failed[i];
@@ -191,10 +290,10 @@ export default function SendPanel({
           formData.append("subject", personalizedSubject);
           formData.append("body", personalizedBody);
 
-          // Add image if provided
-          if (selectedImage) {
-            formData.append("image", selectedImage);
-          }
+          // Add all compressed images if provided
+          compressedImages.forEach((image) => {
+            formData.append("image", image, image.name);
+          });
 
           // Send individual email
           const response = await fetch("/api/send-email", {
@@ -334,8 +433,17 @@ export default function SendPanel({
                   </div>
                 </div>
                 <div>
-                  <div className="text-gray-500 mb-1">Estimated Delivery</div>
-                  <div className="font-medium">Within a few minutes</div>
+                  <div className="text-gray-500 mb-1">Attachments</div>
+                  <div className="font-medium">
+                    {(() => {
+                      const totalImages = selectedImages && selectedImages.length > 0 
+                        ? selectedImages.length 
+                        : selectedImage 
+                        ? 1 
+                        : 0;
+                      return totalImages > 0 ? `${totalImages} image(s)` : "None";
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>

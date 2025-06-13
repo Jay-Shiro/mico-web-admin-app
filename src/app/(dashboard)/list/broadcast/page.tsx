@@ -18,7 +18,8 @@ export default function BroadcastPage() {
     template: "default",
   });
   const [showPreview, setShowPreview] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]); // Support for multiple images
+  const [selectedImage, setSelectedImage] = useState<File | null>(null); // Keep for backward compatibility
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -232,6 +233,8 @@ export default function BroadcastPage() {
                 onContinue={proceedToPreview}
                 selectedImage={selectedImage}
                 setSelectedImage={setSelectedImage}
+                selectedImages={selectedImages}
+                setSelectedImages={setSelectedImages}
               />
             )}
 
@@ -250,6 +253,7 @@ export default function BroadcastPage() {
                 selectedRecipients={selectedRecipients}
                 onBack={() => setStep("preview")}
                 selectedImage={selectedImage}
+                selectedImages={selectedImages}
               />
             )}
           </motion.div>
