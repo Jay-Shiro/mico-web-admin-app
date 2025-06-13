@@ -1,0 +1,16 @@
+
+> lama-dev-next-dashboard@0.1.0 build
+> NODE_ENV=production next build
+
+  ▲ Next.js 14.2.26
+  - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+Failed to compile.
+
+src/app/api/send-email/route.ts
+Type error: File '/Users/mac/Desktop/mico/mico-web-admin/mico-web-admin/src/app/api/send-email/route.ts' is not a module.
+
+Next.js build worker exited with code: 1 and signal: null

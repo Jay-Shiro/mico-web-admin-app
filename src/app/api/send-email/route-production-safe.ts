@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BASE_URL = process.env.NEXT_API_BASE_URL;
 
+/**
+ * PRODUCTION-SAFE EMAIL API ROUTE
+ * 
+ * This version prioritizes reliability over features:
+ * - Disables images in production for now to ensure basic email functionality works
+ * - Uses simple string parameters instead of FormData for production
+ * - Includes comprehensive logging for debugging
+ */
+
 export async function POST(request: NextRequest) {
   try {
-    console.log("📧 Send-email API called at:", new Date().toISOString());
+    console.log("📧 PRODUCTION-SAFE Send-email API called at:", new Date().toISOString());
     console.log("🌍 Environment:", {
       NODE_ENV: process.env.NODE_ENV,
       BASE_URL: BASE_URL,
@@ -38,21 +47,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // PRODUCTION STRATEGY: Use FormData but without images for reliability
+    // PRODUCTION STRATEGY: Temporarily disable images to ensure basic functionality works
     if (process.env.NODE_ENV === 'production') {
-      console.log("🚀 PRODUCTION MODE: Using FormData without images for reliability");
+      console.log("🚀 PRODUCTION MODE: Sending email without images for reliability");
       
       if (hasImages) {
         console.log("⚠️ Images detected but disabled in production for stability");
       }
       
-      // Use native FormData without images for production reliability
-      const productionFormData = new FormData();
-      productionFormData.append("email", email);
-      productionFormData.append("subject", subject);
-      productionFormData.append("body", body);
+      // Use URL-encoded form data instead of multipart for production reliability
+      const urlEncodedData = new URLSearchParams({
+        email: email,
+        subject: subject,
+        body: body
+      });
 
-      console.log("📤 Sending FormData (no images) to FastAPI...");
+      console.log("📤 Sending URL-encoded data to FastAPI...");
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
@@ -63,12 +73,12 @@ export async function POST(request: NextRequest) {
       try {
         const response = await fetch(`${BASE_URL}/send-email`, {
           method: "POST",
-          body: productionFormData,
-          signal: controller.signal,
           headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
             'Accept': 'application/json',
-            // Let browser set Content-Type for FormData
           },
+          body: urlEncodedData.toString(),
+          signal: controller.signal,
         });
 
         clearTimeout(timeoutId);
@@ -114,9 +124,9 @@ export async function POST(request: NextRequest) {
               details: responseText,
               status: response.status,
               debug: {
-                method: "FORMDATA_NO_IMAGES",
-                contentType: "multipart/form-data",
-                hasImages: false
+                method: "URL_ENCODED",
+                contentType: "application/x-www-form-urlencoded",
+                bodyLength: urlEncodedData.toString().length
               }
             },
             { status: response.status }
@@ -169,6 +179,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Development mode FormData handling
+ */
 async function sendEmailViaDevelopmentFormData(email: string, subject: string, body: string, images: File[]) {
   try {
     console.log("📤 Creating FormData for development...");
