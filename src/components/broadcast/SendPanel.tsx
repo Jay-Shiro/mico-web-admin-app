@@ -11,12 +11,14 @@ type SendPanelProps = {
   };
   selectedRecipients: any[];
   onBack: () => void;
+  selectedImage?: File | null;
 };
 
 export default function SendPanel({
   emailContent,
   selectedRecipients,
   onBack,
+  selectedImage,
 }: SendPanelProps) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -46,21 +48,19 @@ export default function SendPanel({
     try {
       setError(null);
       setSending(true);
+      setProgress(0);
 
-      // Start progress indicator
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 95) {
-            clearInterval(progressInterval);
-            return 95;
-          }
-          return prev + 5;
-        });
-      }, 300);
+      const results = {
+        successful: [] as string[],
+        failed: [] as { email: string; reason: string }[],
+        total: selectedRecipients.length,
+      };
 
-      // Process emails for each recipient with personalized parameters
-      const emailsToSend = selectedRecipients
-        .map((recipient) => {
+      // Send emails one by one to match our new API structure
+      for (let i = 0; i < selectedRecipients.length; i++) {
+        const recipient = selectedRecipients[i];
+
+        try {
           // Replace parameters in subject and body with recipient's data
           const personalizedSubject = replaceParameters(
             emailContent.subject,
@@ -71,41 +71,69 @@ export default function SendPanel({
             recipient
           );
 
-          return {
+          // Create FormData for individual email
+          const formData = new FormData();
+          formData.append("email", recipient.email);
+          formData.append("subject", personalizedSubject);
+          formData.append("body", personalizedBody);
+
+          // Add image if provided
+          if (selectedImage) {
+            formData.append("image", selectedImage);
+          }
+
+          // Send individual email with timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => {
+            controller.abort();
+          }, 20000); // 20 second timeout per email
+
+          const response = await fetch("/api/send-email", {
+            method: "POST",
+            body: formData,
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            let errorData;
+            try {
+              errorData = await response.json();
+            } catch {
+              errorData = {
+                error: `HTTP ${response.status}: ${response.statusText}`,
+              };
+            }
+            throw new Error(
+              errorData.details ||
+                errorData.error ||
+                `Failed to send email (${response.status})`
+            );
+          }
+
+          const data = await response.json();
+          results.successful.push(recipient.email);
+        } catch (err: any) {
+          results.failed.push({
             email: recipient.email,
-            subject: personalizedSubject,
-            body: personalizedBody,
-          };
-        })
-        .filter((item) => item.email); // Filter out any without email
+            reason: err.name === "AbortError" ? "Request timeout" : err.message,
+          });
+        }
 
-      if (emailsToSend.length === 0) {
-        clearInterval(progressInterval);
-        setError("No valid email addresses found in the selected recipients.");
-        setSending(false);
-        return;
+        // Update progress
+        const progressPercent = Math.round(
+          ((i + 1) / selectedRecipients.length) * 100
+        );
+        setProgress(progressPercent);
+
+        // Small delay between emails to avoid overwhelming the server
+        if (i < selectedRecipients.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
       }
 
-      // Send to our API endpoint
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipients: emailsToSend,
-        }),
-      });
-
-      clearInterval(progressInterval);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send emails");
-      }
-
-      const data = await response.json();
-      setResults(data.results);
+      setResults(results);
       setProgress(100);
       setSent(true);
     } catch (err: any) {
@@ -124,25 +152,29 @@ export default function SendPanel({
       setSending(true);
       setProgress(0);
 
-      // Start progress indicator again
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 95) {
-            clearInterval(progressInterval);
-            return 95;
-          }
-          return prev + 5;
-        });
-      }, 300);
+      const retryResults = {
+        successful: [] as string[],
+        failed: [] as { email: string; reason: string }[],
+        total: results.failed.length,
+      };
 
-      // Get just the failed emails to retry
-      const failedEmails = results.failed
-        .map((item) => {
-          const recipient = selectedRecipients.find(
-            (r) => r.email === item.email
-          );
-          if (!recipient) return null;
+      // Retry sending failed emails one by one
+      for (let i = 0; i < results.failed.length; i++) {
+        const failedItem = results.failed[i];
 
+        // Find the original recipient data
+        const recipient = selectedRecipients.find(
+          (r) => r.email === failedItem.email
+        );
+        if (!recipient) {
+          retryResults.failed.push({
+            email: failedItem.email,
+            reason: "Recipient data not found",
+          });
+          continue;
+        }
+
+        try {
           // Replace parameters in subject and body with recipient's data
           const personalizedSubject = replaceParameters(
             emailContent.subject,
@@ -153,45 +185,54 @@ export default function SendPanel({
             recipient
           );
 
-          return {
+          // Create FormData for individual email retry
+          const formData = new FormData();
+          formData.append("email", recipient.email);
+          formData.append("subject", personalizedSubject);
+          formData.append("body", personalizedBody);
+
+          // Add image if provided
+          if (selectedImage) {
+            formData.append("image", selectedImage);
+          }
+
+          // Send individual email
+          const response = await fetch("/api/send-email", {
+            method: "POST",
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(
+              errorData.details || errorData.error || "Failed to send email"
+            );
+          }
+
+          retryResults.successful.push(recipient.email);
+        } catch (err: any) {
+          retryResults.failed.push({
             email: recipient.email,
-            subject: personalizedSubject,
-            body: personalizedBody,
-          };
-        })
-        .filter(Boolean);
+            reason: err.message,
+          });
+        }
 
-      if (failedEmails.length === 0) {
-        clearInterval(progressInterval);
-        setError("No valid email addresses found to retry.");
-        setSending(false);
-        return;
+        // Update progress
+        const progressPercent = Math.round(
+          ((i + 1) / results.failed.length) * 100
+        );
+        setProgress(progressPercent);
+
+        // Small delay between retries
+        if (i < results.failed.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
       }
 
-      // Send to our API endpoint
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          recipients: failedEmails,
-        }),
-      });
-
-      clearInterval(progressInterval);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to send emails");
-      }
-
-      const data = await response.json();
-
-      // Update results
+      // Update results - add successful retries to overall successful list
       setResults({
-        successful: [...results.successful, ...data.results.successful],
-        failed: data.results.failed,
+        successful: [...results.successful, ...retryResults.successful],
+        failed: retryResults.failed,
         total: results.total,
       });
 

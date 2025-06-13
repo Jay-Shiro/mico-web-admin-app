@@ -1,6 +1,4 @@
 {
-    "cSpell.words": [
-        "accountbank",
-        "accountname"
-    ]
+  "cSpell.words": ["accountbank", "accountname"],
+  "liveServer.settings.port": 5501
 }

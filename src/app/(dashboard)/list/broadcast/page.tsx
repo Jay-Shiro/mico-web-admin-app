@@ -18,6 +18,7 @@ export default function BroadcastPage() {
     template: "default",
   });
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -229,6 +230,8 @@ export default function BroadcastPage() {
                 onPreview={() => setShowPreview(!showPreview)}
                 showPreview={showPreview}
                 onContinue={proceedToPreview}
+                selectedImage={selectedImage}
+                setSelectedImage={setSelectedImage}
               />
             )}
 
@@ -246,6 +249,7 @@ export default function BroadcastPage() {
                 emailContent={emailContent}
                 selectedRecipients={selectedRecipients}
                 onBack={() => setStep("preview")}
+                selectedImage={selectedImage}
               />
             )}
           </motion.div>

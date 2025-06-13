@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email with Image Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .test-container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      input,
+      textarea {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+
+      textarea {
+        height: 120px;
+        resize: vertical;
+      }
+
+      .file-input {
+        border: 2px dashed #7ea852;
+        background: #f8fdf4;
+        cursor: pointer;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .test-btn {
+        background: #7ea852;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .test-btn:hover {
+        background: #6a9147;
+      }
+
+      .test-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .result {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 5px;
+        display: none;
+      }
+
+      .result.success {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+      }
+
+      .result.error {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+      }
+
+      .preview {
+        margin-top: 10px;
+        max-width: 200px;
+        border-radius: 5px;
+      }
+
+      .image-info {
+        background: #e9f7ef;
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #27ae60;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>📧 Email with Image Test</h1>
+      <p>
+        Test the complete email functionality with image attachment and inline
+        embedding.
+      </p>
+
+      <form id="emailForm">
+        <div class="form-group">
+          <label for="email">Email Address:</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            required
+            placeholder="test@example.com"
+            value="test@example.com"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="subject">Subject:</label>
+          <input
+            type="text"
+            id="subject"
+            name="subject"
+            required
+            placeholder="Test Email with Image"
+            value="Test Email with Image Attachment"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="body">Email Body (supports HTML):</label>
+          <textarea
+            id="body"
+            name="body"
+            required
+            placeholder="Enter your email content here..."
+          >
+<h2>Hello from Mico!</h2>
+<p>This is a test email with an inline image attachment.</p>
+<p>The image below should be embedded directly in the email:</p>
+<img src="cid:inline_image" alt="Test Image" style="max-width: 100%; border-radius: 8px; margin: 10px 0;">
+<p>If you can see the image above, the email functionality is working perfectly!</p>
+<p>Best regards,<br>The Mico Team</p>
+                </textarea
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="image">Select Image (optional):</label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+            style="display: none"
+            onchange="handleImageSelect(this)"
+          />
+          <div
+            class="file-input"
+            onclick="document.getElementById('image').click()"
+          >
+            <div id="file-prompt">
+              📸 Click to select an image<br />
+              <small>PNG, JPG, GIF (max 10MB)</small>
+            </div>
+          </div>
+          <div id="image-preview"></div>
+        </div>
+
+        <button type="submit" class="test-btn" id="sendBtn">
+          🚀 Send Test Email
+        </button>
+      </form>
+
+      <div id="result" class="result"></div>
+    </div>
+
+    <script>
+      let selectedImage = null;
+
+      function handleImageSelect(input) {
+        const file = input.files[0];
+        if (file) {
+          selectedImage = file;
+
+          // Create preview
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const preview = document.getElementById("image-preview");
+            preview.innerHTML = `
+                        <img src="${
+                          e.target.result
+                        }" alt="Preview" class="preview">
+                        <div class="image-info">
+                            📁 ${file.name}<br>
+                            📏 ${(file.size / 1024).toFixed(1)} KB<br>
+                            🎨 ${file.type}
+                        </div>
+                    `;
+          };
+          reader.readAsDataURL(file);
+
+          document.getElementById("file-prompt").innerHTML =
+            "✅ Image selected - click to change";
+        }
+      }
+
+      document
+        .getElementById("emailForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const sendBtn = document.getElementById("sendBtn");
+          const result = document.getElementById("result");
+
+          // Disable button and show loading
+          sendBtn.disabled = true;
+          sendBtn.textContent = "📤 Sending...";
+          result.style.display = "none";
+
+          try {
+            // Create FormData
+            const formData = new FormData();
+            formData.append("email", document.getElementById("email").value);
+            formData.append(
+              "subject",
+              document.getElementById("subject").value
+            );
+            formData.append("body", document.getElementById("body").value);
+
+            if (selectedImage) {
+              formData.append("image", selectedImage);
+            }
+
+            console.log("📤 Sending email with data:", {
+              email: formData.get("email"),
+              subject: formData.get("subject"),
+              body: formData.get("body").substring(0, 100) + "...",
+              hasImage: !!selectedImage,
+            });
+
+            // Send to our API
+            const response = await fetch("/api/send-email", {
+              method: "POST",
+              body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+              result.className = "result success";
+              result.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p>${data.message}</p>
+                        <pre>${JSON.stringify(data.data, null, 2)}</pre>
+                    `;
+            } else {
+              throw new Error(data.details || data.error || "Unknown error");
+            }
+          } catch (error) {
+            console.error("❌ Error sending email:", error);
+            result.className = "result error";
+            result.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+          } finally {
+            // Re-enable button
+            sendBtn.disabled = false;
+            sendBtn.textContent = "🚀 Send Test Email";
+            result.style.display = "block";
+          }
+        });
+    </script>
+  </body>
+</html>

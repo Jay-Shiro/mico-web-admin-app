@@ -11,6 +11,7 @@
   "dependencies": {
     "@googlemaps/js-api-loader": "^1.16.8",
     "@tinymce/tinymce-react": "^6.1.0",
+    "form-data": "^4.0.3",
     "framer-motion": "^12.5.0",
     "fuse.js": "^7.1.0",
     "lucide-react": "^0.483.0",
@@ -29,6 +30,7 @@
     "tinymce": "^7.8.0"
   },
   "devDependencies": {
+    "@types/form-data": "^2.2.1",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^20",
     "@types/react": "^18",
