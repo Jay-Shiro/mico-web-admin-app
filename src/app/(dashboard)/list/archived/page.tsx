@@ -69,6 +69,20 @@ const SearchInput = ({ input, setInput }: SearchInputProps) => {
   );
 };
 
+// Helper to safely render location fields
+const safeRenderLocation = (location: any) => {
+  if (!location) return "";
+  if (typeof location === "string") return location;
+  if (typeof location === "object") {
+    if (location.address) return location.address;
+    if (location.latitude && location.longitude) {
+      return `${location.latitude}, ${location.longitude}`;
+    }
+    return JSON.stringify(location);
+  }
+  return String(location);
+};
+
 const ArchivedDeliveriesPage = () => {
   const { data: session } = useSession();
   const [archivedDeliveries, setArchivedDeliveries] = useState<
@@ -241,22 +255,9 @@ const ArchivedDeliveriesPage = () => {
                         </button>
                       )}
                     </div>
+                    {safeRenderLocation(delivery.startpoint)} →{" "}
+                    {safeRenderLocation(delivery.endpoint)}
                   </div>
-                  {delivery.rider && (
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">Rider</p>
-                      <div className="flex items-center gap-2">
-                        <Bike size={16} className="text-gray-400" />
-                        <p className="font-medium">{delivery.rider.name}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Route</p>
-                  <p className="font-medium">
-                    {delivery.startpoint} → {delivery.endpoint}
-                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Details</p>

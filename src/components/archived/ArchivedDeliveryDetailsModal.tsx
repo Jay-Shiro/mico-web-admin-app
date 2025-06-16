@@ -67,6 +67,20 @@ const formatDate = (dateString: string) => {
   });
 };
 
+// Helper to safely render location fields
+const safeRenderLocation = (location: any) => {
+  if (!location) return "";
+  if (typeof location === "string") return location;
+  if (typeof location === "object") {
+    if (location.address) return location.address;
+    if (location.latitude && location.longitude) {
+      return `${location.latitude}, ${location.longitude}`;
+    }
+    return JSON.stringify(location);
+  }
+  return String(location);
+};
+
 export default function ArchivedDeliveryDetailsModal({
   delivery,
   onClose,
@@ -252,8 +266,12 @@ export default function ArchivedDeliveryDetailsModal({
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Route</p>
-                  <p className="font-medium">From: {delivery.startpoint}</p>
-                  <p className="font-medium">To: {delivery.endpoint}</p>
+                  <p className="font-medium">
+                    From: {safeRenderLocation(delivery.startpoint)}
+                  </p>
+                  <p className="font-medium">
+                    To: {safeRenderLocation(delivery.endpoint)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Distance</p>
@@ -300,25 +318,7 @@ export default function ArchivedDeliveryDetailsModal({
               <h3 className="font-semibold mb-4">Delivery Details</h3>
               <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-500">Vehicle Type</p>
-                  <p className="font-medium">{delivery.vehicletype}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Package Size</p>
-                  <p className="font-medium">{delivery.packagesize}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Delivery Speed</p>
-                  <p className="font-medium">{delivery.deliveryspeed}</p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Archive Information</h3>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-gray-500">Archived Date</p>
+                  <p className="text-sm text-gray-500">Archived At</p>
                   <p className="font-medium">
                     {formatDate(delivery.archived_at)}
                   </p>
